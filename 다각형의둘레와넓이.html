@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>다각형의 둘레와 넓이 - 복습 노트</title>
+<style>
+  :root{
+    --main:#3b6d11;
+    --main-light:#eaf3de;
+    --accent:#0c447c;
+    --accent-light:#e6f1fb;
+    --warn:#854f0b;
+    --warn-light:#faeeda;
+    --danger:#a32d2d;
+    --danger-light:#fcebeb;
+    --gray-line:#d3d1c7;
+    --text:#2c2c2a;
+    --text-sub:#5f5e5a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:0;
+    font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    background:#f6f5f0;
+    color:var(--text);
+  }
+  header{
+    background:var(--main);
+    color:#fff;
+    padding:22px 16px;
+    text-align:center;
+  }
+  header h1{
+    margin:0 0 4px;
+    font-size:22px;
+    font-weight:700;
+  }
+  header p{
+    margin:0;
+    font-size:13px;
+    opacity:0.9;
+  }
+  .name-bar{
+    max-width:760px;
+    margin:14px auto 0;
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    flex-wrap:wrap;
+    padding:0 16px;
+  }
+  .name-bar input{
+    padding:6px 10px;
+    border-radius:8px;
+    border:1px solid var(--gray-line);
+    font-size:14px;
+    width:90px;
+  }
+  .name-bar input.wide{width:140px;}
+
+  .tabs{
+    display:flex;
+    max-width:760px;
+    margin:18px auto 0;
+    padding:0 16px;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  .tab-btn{
+    flex:1 1 140px;
+    min-width:120px;
+    padding:10px 6px;
+    border-radius:10px;
+    border:1.5px solid var(--gray-line);
+    background:#fff;
+    color:var(--text-sub);
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .tab-btn.active{
+    background:var(--main);
+    color:#fff;
+    border-color:var(--main);
+  }
+  .progress-wrap{
+    max-width:760px;
+    margin:10px auto 0;
+    padding:0 16px;
+  }
+  .progress-bar{
+    height:10px;
+    background:#e4e2d8;
+    border-radius:6px;
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    background:var(--main);
+    width:0%;
+    transition:width .3s;
+  }
+  .progress-text{
+    font-size:12px;
+    color:var(--text-sub);
+    text-align:right;
+    margin-top:4px;
+  }
+
+  main{
+    max-width:760px;
+    margin:18px auto 60px;
+    padding:0 16px;
+  }
+  .section{display:none;}
+  .section.active{display:block;}
+
+  .card{
+    background:#fff;
+    border:1px solid var(--gray-line);
+    border-radius:14px;
+    padding:18px 18px 16px;
+    margin-bottom:16px;
+  }
+  .q-num{
+    display:inline-block;
+    background:var(--main-light);
+    color:var(--main);
+    font-weight:700;
+    font-size:13px;
+    border-radius:20px;
+    padding:3px 12px;
+    margin-bottom:10px;
+  }
+  .q-text{
+    font-size:16px;
+    font-weight:700;
+    line-height:1.55;
+    margin:0 0 12px;
+  }
+  .q-sub{
+    font-size:13px;
+    color:var(--text-sub);
+    margin:-6px 0 12px;
+  }
+  svg.diagram{
+    display:block;
+    margin:0 auto 14px;
+    max-width:100%;
+  }
+
+  .blanks-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:center;
+    font-size:15px;
+    line-height:2.4;
+  }
+  .blanks-row input[type=text]{
+    width:96px;
+  }
+  input[type=text], textarea{
+    padding:8px 10px;
+    border-radius:8px;
+    border:1.5px solid var(--gray-line);
+    font-size:15px;
+    font-family:inherit;
+    background:#fff;
+    color:var(--text);
+  }
+  input[type=text]:focus, textarea:focus{
+    outline:none;
+    border-color:var(--main);
+  }
+  textarea{
+    width:100%;
+    min-height:70px;
+    resize:vertical;
+  }
+  .formula-input{
+    width:100%;
+    max-width:340px;
+    font-size:16px;
+    font-weight:700;
+    text-align:center;
+  }
+
+  .btn-row{
+    display:flex;
+    gap:8px;
+    margin-top:12px;
+    flex-wrap:wrap;
+  }
+  button{
+    font-family:inherit;
+    font-size:14px;
+    font-weight:700;
+    border-radius:8px;
+    padding:9px 16px;
+    cursor:pointer;
+    border:1.5px solid var(--gray-line);
+    background:#fff;
+    color:var(--text);
+  }
+  button:disabled{
+    opacity:0.4;
+    cursor:not-allowed;
+  }
+  .btn-check{
+    background:var(--main);
+    color:#fff;
+    border-color:var(--main);
+  }
+  .btn-hint{
+    background:var(--warn-light);
+    color:var(--warn);
+    border-color:var(--warn);
+  }
+  .btn-answer{
+    background:var(--danger-light);
+    color:var(--danger);
+    border-color:var(--danger);
+  }
+  .feedback{
+    margin-top:10px;
+    font-size:14px;
+    font-weight:700;
+    min-height:20px;
+  }
+  .feedback.ok{color:#3b6d11;}
+  .feedback.bad{color:var(--danger);}
+  .hint-box, .answer-box{
+    margin-top:10px;
+    font-size:14px;
+    border-radius:8px;
+    padding:10px 12px;
+    display:none;
+    line-height:1.5;
+    user-select:none;
+    -webkit-user-select:none;
+  }
+  .hint-box{
+    background:var(--warn-light);
+    color:var(--warn);
+  }
+  .answer-box{
+    background:var(--danger-light);
+    color:var(--danger);
+  }
+  .done-stamp{
+    display:none;
+    margin-top:10px;
+    font-size:13px;
+    color:#3b6d11;
+    font-weight:700;
+  }
+  .summary{
+    text-align:center;
+    padding:30px 16px;
+  }
+  .summary h2{font-size:20px;}
+  footer{
+    text-align:center;
+    font-size:12px;
+    color:var(--text-sub);
+    padding:20px 0 30px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>다각형의 둘레와 넓이</h1>
+  <p>내가 만드는 수학 복습 정리 노트 (5학년 1학기)</p>
+</header>
+
+<div class="name-bar">
+  <input type="text" class="wide" id="stuClass" placeholder="반">
+  <input type="text" class="wide" id="stuNum" placeholder="번호">
+  <input type="text" class="wide" id="stuName" placeholder="이름">
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" data-target="sec-para">평행사변형</button>
+  <button class="tab-btn" data-target="sec-tri">삼각형</button>
+  <button class="tab-btn" data-target="sec-rho">마름모</button>
+  <button class="tab-btn" data-target="sec-trap">사다리꼴</button>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-text" id="progressText">완료한 문제: 0 / 16</div>
+</div>
+
+<main id="quizArea"></main>
+
+<footer>2022 개정 교육과정 5학년 1학기 수학 · 다각형의 둘레와 넓이</footer>
+
+<script>
+const DATA = {
+  para: {
+    label: "평행사변형",
+    color: "#3b6d11",
+    diagram: `<svg class="diagram" viewBox="0 0 260 140" width="260" height="140">
+      <polygon points="40,110 90,30 230,30 180,110" fill="#eaf3de" stroke="#639922" stroke-width="2"/>
+      <line x1="90" y1="30" x2="90" y2="110" stroke="#a32d2d" stroke-width="2" stroke-dasharray="4 3"/>
+      <rect x="86" y="100" width="8" height="8" fill="none" stroke="#a32d2d" stroke-width="1.5"/>
+      <text x="40" y="128" font-size="12" fill="#2c2c2a">밑변</text>
+      <text x="98" y="70" font-size="12" fill="#a32d2d">높이</text>
+    </svg>`,
+    questions: [
+      {
+        type:"blank",
+        text:"평행사변형에서 평행한 두 변을 [ ① ]이라 하고, 두 밑변 사이의 거리를 [ ② ]라고 합니다.",
+        blanks:[
+          {accepted:["밑변"], width:90},
+          {accepted:["높이"], width:90}
+        ],
+        hint:"평행사변형에는 서로 마주 보며 평행한 변이 두 개 있어요. 그 변을 무엇이라 부르는지, 그리고 그 두 변 사이의 수직 거리를 무엇이라 부르는지 떠올려 보세요.",
+        answerText:"① 밑변 ② 높이"
+      },
+      {
+        type:"short",
+        text:"평행사변형의 높이는 두 밑변과 어떤 관계(각)를 이루나요?",
+        sub:"한 단어로 답해 보세요.",
+        accepted:["수직","직각","90도","90°"],
+        hint:"높이를 나타내는 선분을 그릴 때, 밑변과 만나는 부분에 작은 사각형(직각 표시)이 그려져 있었어요.",
+        answerText:"높이는 밑변과 수직(직각)을 이룹니다."
+      },
+      {
+        type:"explain",
+        text:"평행사변형을 잘라서 옮기면 어떤 모양이 되며, 그 모양의 넓이를 이용해 평행사변형의 넓이를 어떻게 구할 수 있는지 설명해 보세요.",
+        keywords:["직사각형","밑변","높이","잘라","옮기"],
+        minHit:2,
+        hint:"평행사변형의 한쪽 옆을 수직으로 잘라서 반대쪽으로 옮기면 어떤 익숙한 도형이 만들어지나요? 그 도형의 넓이 공식을 떠올려 보세요.",
+        answerText:"평행사변형의 한쪽을 잘라 옮기면 직사각형이 됩니다. 이때 직사각형의 가로는 평행사변형의 밑변, 세로는 평행사변형의 높이와 같으므로, (직사각형의 넓이)=(가로)×(세로)를 이용해 평행사변형의 넓이를 구할 수 있습니다."
+      },
+      {
+        type:"formula",
+        text:"평행사변형의 넓이를 구하는 식을 완성해 보세요.",
+        prefix:"평행사변형의 넓이 = ",
+        accepted:[["밑변","높이"],["밑변의 길이","높이"],["밑변","높이의 길이"],["밑변의 길이","높이의 길이"]],
+        op:"×",
+        hint:"잘라서 옮기면 직사각형이 되고, 직사각형의 넓이는 가로×세로였지요? 가로 자리에는 무엇이, 세로 자리에는 무엇이 들어갈까요?",
+        answerText:"평행사변형의 넓이 = 밑변 × 높이"
+      }
+    ]
+  },
+  tri: {
+    label:"삼각형",
+    color:"#3b6d11",
+    diagram:`<svg class="diagram" viewBox="0 0 260 140" width="260" height="140">
+      <polygon points="40,120 230,120 130,20" fill="#eaf3de" stroke="#639922" stroke-width="2"/>
+      <line x1="130" y1="20" x2="130" y2="120" stroke="#a32d2d" stroke-width="2" stroke-dasharray="4 3"/>
+      <rect x="126" y="112" width="8" height="8" fill="none" stroke="#a32d2d" stroke-width="1.5"/>
+      <text x="40" y="135" font-size="12" fill="#2c2c2a">밑변</text>
+      <text x="138" y="70" font-size="12" fill="#a32d2d">높이</text>
+    </svg>`,
+    questions:[
+      {
+        type:"blank",
+        text:"삼각형에서 어느 한 변을 [ ① ]이라고 하면, 그 밑변과 마주 보는 꼭짓점에서 밑변에 수직으로 그은 선분의 길이를 [ ② ]라고 합니다.",
+        blanks:[
+          {accepted:["밑변"], width:90},
+          {accepted:["높이"], width:90}
+        ],
+        hint:"기준이 되는 변의 이름과, 그 변의 마주 보는 꼭짓점에서 수직으로 내린 선분의 이름을 떠올려 보세요.",
+        answerText:"① 밑변 ② 높이"
+      },
+      {
+        type:"explain",
+        text:"합동인 삼각형 두 개를 이용하여 삼각형의 넓이를 구하는 방법을 설명해 보세요.",
+        keywords:["합동","평행사변형","두 배","밑변","높이"],
+        minHit:2,
+        hint:"똑같은 삼각형 두 개를 거꾸로 뒤집어 붙이면 어떤 도형이 만들어지나요? 그 도형의 넓이는 삼각형 넓이의 몇 배일까요?",
+        answerText:"합동인 삼각형 두 개를 붙이면 밑변과 높이가 같은 평행사변형이 만들어집니다. 이 평행사변형의 넓이는 삼각형 넓이의 2배이므로, 삼각형의 넓이는 평행사변형의 넓이를 2로 나누어 구할 수 있습니다."
+      },
+      {
+        type:"explain",
+        text:"삼각형을 잘라서 직사각형 모양으로 만들어 넓이를 구하는 방법을 설명해 보세요.",
+        keywords:["직사각형","절반","옮기","밑변","높이"],
+        minHit:2,
+        hint:"삼각형의 높이의 절반 위치를 수평으로 자른 뒤, 잘려진 작은 삼각형을 돌려서 옆에 붙이면 어떤 도형이 될까요?",
+        answerText:"삼각형의 높이의 한가운데를 밑변과 평행하게 잘라, 잘린 부분을 돌려 옆으로 옮기면 직사각형이 됩니다. 이 직사각형의 가로는 삼각형의 밑변, 세로는 삼각형의 높이의 절반이 되어 넓이를 구할 수 있습니다."
+      },
+      {
+        type:"formula",
+        text:"삼각형의 넓이를 구하는 식을 완성해 보세요.",
+        prefix:"삼각형의 넓이 = ",
+        accepted:[["밑변","높이"],["밑변의 길이","높이"],["밑변","높이의 길이"],["밑변의 길이","높이의 길이"]],
+        op:"×",
+        divide:2,
+        hint:"합동인 삼각형 두 개를 붙이면 평행사변형(밑변×높이)이 됩니다. 삼각형 한 개의 넓이는 그 평행사변형의 넓이를 몇으로 나눈 것일까요?",
+        answerText:"삼각형의 넓이 = 밑변 × 높이 ÷ 2"
+      }
+    ]
+  },
+  rho:{
+    label:"마름모",
+    color:"#3b6d11",
+    diagram:`<svg class="diagram" viewBox="0 0 260 160" width="260" height="160">
+      <rect x="50" y="20" width="160" height="120" fill="none" stroke="#888780" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <polygon points="130,20 210,80 130,140 50,80" fill="#faeeda" stroke="#854f0b" stroke-width="2"/>
+      <line x1="130" y1="20" x2="130" y2="140" stroke="#a32d2d" stroke-width="2"/>
+      <line x1="50" y1="80" x2="210" y2="80" stroke="#a32d2d" stroke-width="2"/>
+      <text x="134" y="16" font-size="12" fill="#a32d2d">대각선1</text>
+      <text x="212" y="84" font-size="12" fill="#a32d2d">대각선2</text>
+    </svg>`,
+    questions:[
+      {
+        type:"short",
+        text:"마름모에는 대각선이 모두 몇 개 있나요?",
+        sub:"숫자로 답해 보세요.",
+        accepted:["2","2개"],
+        hint:"위 그림에서 빨간 선이 몇 개 그려져 있는지 세어 보세요.",
+        answerText:"마름모의 대각선은 2개입니다."
+      },
+      {
+        type:"explain",
+        text:"마름모를 둘러싸는 직사각형을 그려서 마름모의 넓이를 구하는 방법을 설명해 보세요.",
+        keywords:["직사각형","대각선","절반","둘러싸"],
+        minHit:2,
+        hint:"마름모를 꼭 맞게 둘러싸는 직사각형을 그리면, 직사각형의 가로와 세로는 마름모의 두 대각선의 길이와 같아요. 마름모의 넓이는 그 직사각형의 넓이의 몇 분의 몇일까요?",
+        answerText:"마름모를 꼭 맞게 둘러싸는 직사각형을 그리면 가로와 세로가 각각 마름모의 두 대각선의 길이와 같습니다. 이때 마름모의 넓이는 그 직사각형의 넓이의 절반이 됩니다."
+      },
+      {
+        type:"explain",
+        text:"마름모의 넓이를 구하는 방법을 설명해 보세요. (다음 3가지 방법 중 하나로 설명해도 됩니다.)\n① 평행사변형 이용  ② 직사각형 이용  ③ 삼각형 2개 이용",
+        keywordSets:[
+          {keywords:["평행사변형","대각선","밑변","높이"], minHit:2},
+          {keywords:["직사각형","대각선","가로","세로"], minHit:2},
+          {keywords:["삼각형","대각선","절반","넓이"], minHit:2}
+        ],
+        hint:"① 마름모의 한 대각선=평행사변형의 밑변, 다른 대각선의 반=높이\n② 마름모의 한 대각선=직사각형의 가로, 다른 대각선의 반=세로\n③ 대각선 1개로 나눈 삼각형 2개: 밑변=한 대각선, 높이=다른 대각선의 절반",
+        answerText:"[방법①] 마름모의 한 대각선=평행사변형의 밑변, 다른 대각선의 반=높이이므로 마름모의 넓이=한 대각선×다른 대각선의 절반\n[방법②] 마름모의 한 대각선=직사각형의 가로, 다른 대각선의 반=세로이므로 마름모의 넓이=한 대각선×다른 대각선의 절반\n[방법③] 대각선 1개를 그으면 삼각형 2개가 생기고, 각 삼각형의 밑변=한 대각선, 높이=다른 대각선의 절반이므로 두 삼각형의 넓이를 더하면 마름모의 넓이를 구할 수 있다."
+      },
+      {
+        type:"formula",
+        text:"마름모의 넓이를 구하는 식을 완성해 보세요.",
+        prefix:"마름모의 넓이 = ",
+        accepted:[["한 대각선","다른 대각선"],["한 대각선의 길이","다른 대각선의 길이"],["한 대각선의 길이","다른 대각선"],["한 대각선","다른 대각선의 길이"],["대각선","대각선"]],
+        op:"×",
+        divide:2,
+        hint:"마름모를 둘러싼 직사각형의 가로와 세로는 두 대각선의 길이와 같았어요. 그 직사각형의 넓이를 구한 뒤, 마름모는 그 절반이라는 것을 식으로 써 보세요.",
+        answerText:"마름모의 넓이 = 한 대각선 × 다른 대각선 ÷ 2"
+      }
+    ]
+  },
+  trap:{
+    label:"사다리꼴",
+    color:"#3b6d11",
+    diagram:`<svg class="diagram" viewBox="0 0 260 140" width="260" height="140">
+      <polygon points="80,30 180,30 230,110 30,110" fill="#faeeda" stroke="#854f0b" stroke-width="2"/>
+      <line x1="80" y1="30" x2="80" y2="110" stroke="#a32d2d" stroke-width="2" stroke-dasharray="4 3"/>
+      <rect x="76" y="100" width="8" height="8" fill="none" stroke="#a32d2d" stroke-width="1.5"/>
+      <text x="115" y="22" font-size="12" fill="#2c2c2a">윗변</text>
+      <text x="20" y="128" font-size="12" fill="#2c2c2a">아랫변</text>
+      <text x="88" y="70" font-size="12" fill="#a32d2d">높이</text>
+    </svg>`,
+    questions:[
+      {
+        type:"blank",
+        text:"사다리꼴에서 평행한 두 변을 [ ① ]이라 하고, 한 밑변을 [ ② ], 다른 밑변을 [ ③ ]이라고 합니다. 이때 두 밑변 사이의 거리를 [ ④ ]라고 합니다.",
+        blanks:[
+          {accepted:["밑변"], width:80},
+          {accepted:["윗변"], width:80},
+          {accepted:["아랫변"], width:80},
+          {accepted:["높이"], width:80}
+        ],
+        swapPairs:[[1,2]],
+        hint:"위쪽에 있는 짧은 밑변과 아래쪽에 있는 긴 밑변의 이름, 그리고 두 밑변 사이의 수직 거리의 이름을 떠올려 보세요.",
+        answerText:"① 밑변 ② 윗변 ③ 아랫변 ④ 높이"
+      },
+      {
+        type:"explain",
+        text:"합동인 사다리꼴 두 개를 이용하여 사다리꼴의 넓이를 구하는 방법을 설명해 보세요.",
+        keywords:["평행사변형","두 배","윗변","아랫변","합동"],
+        minHit:2,
+        hint:"합동인 사다리꼴 두 개를 거꾸로 뒤집어 붙이면 어떤 도형이 되나요? 그 도형의 밑변은 사다리꼴의 윗변과 아랫변을 더한 길이와 같아요.",
+        answerText:"합동인 사다리꼴 두 개를 거꾸로 뒤집어 붙이면 밑변이 (윗변+아랫변)이고 높이가 사다리꼴의 높이와 같은 평행사변형이 만들어집니다. 이 평행사변형의 넓이는 사다리꼴 넓이의 2배이므로, 2로 나누면 사다리꼴의 넓이가 됩니다."
+      },
+      {
+        type:"explain",
+        text:"사다리꼴을 삼각형 두 개로 나누어 넓이를 구하는 방법을 설명해 보세요.",
+        keywords:["삼각형","대각선","윗변","아랫변","넓이"],
+        minHit:2,
+        hint:"사다리꼴에 대각선을 하나 그으면 삼각형 두 개가 생겨요. 각 삼각형의 밑변은 윗변과 아랫변이 되고, 높이는 사다리꼴의 높이와 같습니다.",
+        answerText:"사다리꼴에 대각선을 그으면 삼각형 두 개로 나뉩니다. 한 삼각형은 밑변이 윗변, 다른 삼각형은 밑변이 아랫변이며 둘 다 높이는 사다리꼴의 높이와 같습니다. 두 삼각형의 넓이를 더하면 사다리꼴의 넓이가 됩니다."
+      },
+      {
+        type:"formula",
+        text:"사다리꼴의 넓이를 구하는 식을 완성해 보세요.",
+        prefix:"사다리꼴의 넓이 = ",
+        accepted:[["윗변+아랫변","높이"],["아랫변+윗변","높이"]],
+        sumForm:true,
+        op:"×",
+        divide:2,
+        hint:"두 개를 붙이면 밑변이 (윗변+아랫변)인 평행사변형이 되고, 그 넓이를 2로 나누면 사다리꼴의 넓이가 됩니다. 식으로 써 보세요.",
+        answerText:"사다리꼴의 넓이 = (윗변 + 아랫변) × 높이 ÷ 2"
+      }
+    ]
+  }
+};
+
+const sections = ["para","tri","rho","trap"];
+let totalQuestions = 0;
+sections.forEach(s=> totalQuestions += DATA[s].questions.length);
+let completedSet = new Set();
+
+function normalize(str){
+  return str.replace(/\s+/g,"").trim();
+}
+
+function checkKeyword(text, kw){
+  return normalize(text).includes(normalize(kw));
+}
+
+function buildSection(key){
+  const sec = DATA[key];
+  let html = `<div class="section" id="sec-${key}">`;
+  html += sec.diagram;
+  sec.questions.forEach((q, idx)=>{
+    const qid = key+"_"+idx;
+    html += `<div class="card" data-qid="${qid}">`;
+    html += `<span class="q-num">${sec.label} 문제 ${idx+1}</span>`;
+    html += `<p class="q-text">${q.text}</p>`;
+    if(q.sub) html += `<p class="q-sub">${q.sub}</p>`;
+
+    if(q.type==="blank"){
+      html += `<div class="blanks-row">`;
+      q.blanks.forEach((b,i)=>{
+        html += `<input type="text" id="${qid}_b${i}" style="width:${b.width}px" placeholder="${i+1}">`;
+      });
+      html += `</div>`;
+    } else if(q.type==="short"){
+      html += `<input type="text" id="${qid}_input" style="width:160px">`;
+    } else if(q.type==="explain"){
+      html += `<textarea id="${qid}_input" placeholder="여기에 설명을 적어 보세요."></textarea>`;
+    } else if(q.type==="formula"){
+      html += `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+        <span style="font-weight:700;">${q.prefix}</span>
+        <input type="text" class="formula-input" id="${qid}_input" placeholder="예: 밑변 × 높이">
+      </div>`;
+    }
+
+    html += `<div class="btn-row">
+      <button class="btn-check" onclick="checkAnswer('${key}',${idx})">확인</button>
+      <button class="btn-hint" id="${qid}_hintBtn" disabled onclick="showHint('${key}',${idx})">힌트</button>
+      <button class="btn-answer" id="${qid}_ansBtn" disabled onclick="showAnswer('${key}',${idx})">정답 보기</button>
+    </div>`;
+    html += `<div class="feedback" id="${qid}_feedback"></div>`;
+    html += `<div class="hint-box" id="${qid}_hintBox"></div>`;
+    html += `<div class="answer-box" id="${qid}_ansBox"></div>`;
+    html += `<div class="done-stamp" id="${qid}_done">✔ 잘했어요! 정답을 맞혔습니다.</div>`;
+    html += `</div>`;
+  });
+  html += `</div>`;
+  return html;
+}
+
+function renderAll(){
+  const area = document.getElementById("quizArea");
+  let html = "";
+  sections.forEach(k=> html += buildSection(k));
+  area.innerHTML = html;
+  document.getElementById("sec-"+sections[0]).classList.add("active");
+}
+
+const wrongCounts = {};
+
+function getQ(key, idx){
+  return DATA[key].questions[idx];
+}
+
+function setFeedback(qid, msg, ok){
+  const el = document.getElementById(qid+"_feedback");
+  el.textContent = msg;
+  el.className = "feedback " + (ok ? "ok":"bad");
+}
+
+function markDone(qid, key, idx){
+  document.querySelectorAll(`[id^="${qid}_"]`).forEach(()=>{});
+  document.getElementById(qid+"_done").style.display = "block";
+  const inputs = document.querySelectorAll(`#sec-${key} [data-qid="${qid}"] input, #sec-${key} [data-qid="${qid}"] textarea`);
+  inputs.forEach(i=> i.disabled = true);
+  document.querySelector(`[data-qid="${qid}"] .btn-check`).disabled = true;
+  document.getElementById(qid+"_hintBtn").disabled = true;
+  document.getElementById(qid+"_ansBtn").disabled = true;
+  if(!completedSet.has(qid)){
+    completedSet.add(qid);
+    updateProgress();
+  }
+}
+
+function updateProgress(){
+  const pct = Math.round((completedSet.size/totalQuestions)*100);
+  document.getElementById("progressFill").style.width = pct+"%";
+  document.getElementById("progressText").textContent = `완료한 문제: ${completedSet.size} / ${totalQuestions}`;
+  if(completedSet.size === totalQuestions) showCelebration();
+}
+
+function parseFormulaInput(raw){
+  return raw
+    .replace(/곱하기/g,"×")
+    .replace(/나누기/g,"÷")
+    .replace(/[Xx*]/g,"×")
+    .replace(/[／/]/g,"÷")
+    .replace(/\s+/g,"")
+    .replace(/[()]/g,"");
+}
+
+function checkAnswer(key, idx){
+  const q = getQ(key, idx);
+  const qid = key+"_"+idx;
+  let correct = false;
+
+  if(q.type==="blank"){
+    const vals = q.blanks.map((b,i)=> document.getElementById(`${qid}_b${i}`).value);
+    const checkOrder = (order) => order.every((origIdx,i)=>{
+      const b = q.blanks[i];
+      return b.accepted.some(a=> normalize(vals[origIdx])===normalize(a));
+    });
+    const defaultOrder = q.blanks.map((_,i)=>i);
+    correct = checkOrder(defaultOrder);
+    if(!correct && q.swapPairs){
+      q.swapPairs.forEach(([a,b])=>{
+        const swapped = [...defaultOrder];
+        swapped[a] = b; swapped[b] = a;
+        if(checkOrder(swapped)) correct = true;
+      });
+    }
+  } else if(q.type==="short"){
+    const val = document.getElementById(qid+"_input").value;
+    correct = q.accepted.some(a=> normalize(val)===normalize(a));
+  } else if(q.type==="explain"){
+    const val = document.getElementById(qid+"_input").value;
+    const stripped = val.replace(/[.,。，、.!?！？\s]/g,"");
+    const isSentence = stripped.length >= 10;
+    if(q.keywordSets){
+      correct = isSentence && q.keywordSets.some(set=>
+        set.keywords.filter(k=>checkKeyword(val,k)).length >= set.minHit
+      );
+    } else {
+      const hitCount = q.keywords.filter(k=>checkKeyword(val,k)).length;
+      correct = hitCount >= q.minHit && isSentence;
+    }
+  } else if(q.type==="formula"){
+    const raw = document.getElementById(qid+"_input").value;
+    const norm = parseFormulaInput(raw);
+    correct = q.accepted.some(termSet=>{
+      let terms = termSet.map(t=> normalize(t.replace(/\+/g,"+")));
+      let core = terms.join("×");
+      let withDivide = q.divide ? core+"÷"+q.divide : core;
+      let altOrder = terms.length===2 ? terms[1]+"×"+terms[0] : core;
+      let altWithDivide = q.divide ? altOrder+"÷"+q.divide : altOrder;
+      return norm===withDivide || norm===altWithDivide || (!q.divide && norm===core);
+    });
+  }
+
+  if(correct){
+    setFeedback(qid, "정답입니다! 잘했어요.", true);
+    document.getElementById(qid+"_hintBox").style.display="none";
+    document.getElementById(qid+"_ansBox").style.display="none";
+    markDone(qid, key, idx);
+  } else {
+    wrongCounts[qid] = (wrongCounts[qid]||0)+1;
+    if(wrongCounts[qid]===1){
+      setFeedback(qid, "아직 정답이 아니에요. 다시 한 번 생각해 볼까요? (힌트 버튼을 눌러보세요)", false);
+      document.getElementById(qid+"_hintBtn").disabled = false;
+    } else {
+      setFeedback(qid, "다시 틀렸어요. 이제 정답 보기 버튼을 눌러 확인해 보세요.", false);
+      document.getElementById(qid+"_ansBtn").disabled = false;
+    }
+  }
+}
+
+function showHint(key, idx){
+  const q = getQ(key, idx);
+  const qid = key+"_"+idx;
+  const box = document.getElementById(qid+"_hintBox");
+  box.textContent = "힌트: " + q.hint;
+  box.style.display = "block";
+}
+
+function showAnswer(key, idx){
+  const q = getQ(key, idx);
+  const qid = key+"_"+idx;
+  const box = document.getElementById(qid+"_ansBox");
+  box.innerHTML = "정답: " + q.answerText + "<br><span style='font-size:12px;opacity:0.85;'>정답을 직접 입력하고 확인 버튼을 눌러 보세요.</span>";
+  box.style.display = "block";
+  const inputs = document.querySelectorAll(`[data-qid="${qid}"] input[type=text], [data-qid="${qid}"] textarea`);
+  inputs.forEach(el=>{ if(!el.disabled){ el.value=""; } });
+  if(inputs.length) inputs[0].focus();
+  setFeedback(qid, "정답을 확인했어요. 직접 입력해 보세요!", false);
+  document.querySelector(`[data-qid="${qid}"] .btn-check`).disabled = false;
+}
+
+document.querySelectorAll(".tab-btn").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+    document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.target).classList.add("active");
+  });
+});
+
+renderAll();
+updateProgress();
+
+document.getElementById("quizArea").addEventListener("paste", e=>{
+  if(e.target.matches("input[type=text], textarea")){
+    e.preventDefault();
+  }
+}, true);
+</script>
+
+<div id="celebOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9000;display:none;align-items:center;justify-content:center;">
+  <canvas id="confettiCanvas" style="position:fixed;inset:0;pointer-events:none;z-index:9001;"></canvas>
+  <div id="celebCard" style="position:relative;z-index:9002;background:#fff;border-radius:20px;padding:36px 32px 28px;max-width:380px;width:90%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.18);">
+    <div style="font-size:48px;margin-bottom:8px;">🎉</div>
+    <h2 style="margin:0 0 4px;font-size:20px;font-weight:700;color:#3b6d11;">수고했어요!</h2>
+    <p style="margin:0 0 20px;font-size:14px;color:#5f5e5a;">다각형의 둘레와 넓이 복습 완료</p>
+    <div id="cardNameBox" style="background:#eaf3de;border-radius:12px;padding:14px 16px;margin-bottom:20px;font-size:15px;color:#2c2c2a;line-height:2;">
+      <span id="cardClass"></span>
+      <span id="cardNum"></span>
+      <span id="cardName" style="font-weight:700;"></span>
+    </div>
+    <p style="font-size:13px;color:#5f5e5a;margin:0 0 20px;line-height:1.6;">
+      평행사변형, 삼각형, 마름모, 사다리꼴의<br>넓이 구하는 방법을 모두 익혔습니다!
+    </p>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+      <button onclick="downloadCard()" style="background:#3b6d11;color:#fff;border:none;border-radius:10px;padding:11px 22px;font-size:14px;font-weight:700;cursor:pointer;">이미지로 저장</button>
+      <button onclick="closeCelebration()" style="background:#f1efe8;color:#2c2c2a;border:none;border-radius:10px;padding:11px 22px;font-size:14px;font-weight:700;cursor:pointer;">닫기</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+let confettiAnim;
+
+function showCelebration(){
+  const cls  = document.getElementById("stuClass").value || "　";
+  const num  = document.getElementById("stuNum").value   || "　";
+  const name = document.getElementById("stuName").value  || "　";
+  document.getElementById("cardClass").textContent = cls  ? cls+"반 " : "";
+  document.getElementById("cardNum").textContent   = num  ? num+"번 " : "";
+  document.getElementById("cardName").textContent  = name || "";
+
+  const overlay = document.getElementById("celebOverlay");
+  overlay.style.display = "flex";
+  startConfetti();
+}
+
+function closeCelebration(){
+  document.getElementById("celebOverlay").style.display = "none";
+  stopConfetti();
+}
+
+function startConfetti(){
+  const canvas = document.getElementById("confettiCanvas");
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext("2d");
+  const colors = ["#639922","#fac775","#378add","#d4537e","#e24b4a","#5dcaa5","#7f77dd","#d85a30"];
+  const pieces = Array.from({length:140}, ()=>({
+    x: Math.random()*canvas.width,
+    y: Math.random()*canvas.height - canvas.height,
+    w: 8 + Math.random()*8,
+    h: 4 + Math.random()*5,
+    color: colors[Math.floor(Math.random()*colors.length)],
+    rot: Math.random()*360,
+    vx: (Math.random()-0.5)*2,
+    vy: 2 + Math.random()*3.5,
+    vr: (Math.random()-0.5)*6
+  }));
+
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    pieces.forEach(p=>{
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot*Math.PI/180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      ctx.restore();
+      p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+      if(p.y > canvas.height+20){ p.y = -20; p.x = Math.random()*canvas.width; }
+    });
+    confettiAnim = requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+function stopConfetti(){
+  if(confettiAnim) cancelAnimationFrame(confettiAnim);
+  const canvas = document.getElementById("confettiCanvas");
+  canvas.getContext("2d").clearRect(0,0,canvas.width,canvas.height);
+}
+
+function downloadCard(){
+  const card = document.getElementById("celebCard");
+  html2canvas(card, {scale:3, useCORS:true, backgroundColor:"#ffffff"}).then(canvas=>{
+    const link = document.createElement("a");
+    const name = document.getElementById("stuName").value || "학생";
+    link.download = name + "_다각형의넓이_수료카드.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>자기소개 인포그래픽</title>
+<style>
+  :root{
+    --main:#4f6df5;
+    --main2:#22c1c3;
+    --accent:#ff7e5f;
+    --bg:#f4f6fb;
+    --text:#222;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family:"Pretendard","Noto Sans KR","Malgun Gothic",sans-serif;
+    background:var(--bg);
+    margin:0;
+    padding:20px;
+    color:var(--text);
+  }
+  /* ===== 툴바 (인쇄시 숨김) ===== */
+  .toolbar{
+    max-width:210mm;
+    margin:0 auto 14px;
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+  .toolbar button{
+    background:var(--main);
+    color:#fff;
+    border:none;
+    padding:10px 16px;
+    border-radius:8px;
+    font-size:14px;
+    cursor:pointer;
+    font-weight:600;
+    box-shadow:0 2px 6px rgba(0,0,0,.15);
+  }
+  .toolbar button:hover{opacity:.9;}
+  .toolbar .hint{
+    font-size:13px;
+    color:#666;
+  }
+  .color-pick{display:flex;gap:6px;align-items:center;font-size:13px;color:#555;}
+  .color-pick input{width:36px;height:28px;border:none;cursor:pointer;}
+
+  /* ===== A4 페이지 ===== */
+  .page{
+    width:210mm;
+    min-height:297mm;
+    margin:0 auto;
+    background:#fff;
+    box-shadow:0 4px 20px rgba(0,0,0,.15);
+    position:relative;
+    overflow:hidden;
+    padding:0;
+  }
+
+  /* 헤더 */
+  .header{
+    background:linear-gradient(135deg,var(--main),var(--main2));
+    color:#fff;
+    padding:14mm 14mm 10mm;
+    display:flex;
+    align-items:center;
+    gap:8mm;
+  }
+  .photo-box{
+    width:32mm;
+    height:32mm;
+    border-radius:50%;
+    background:rgba(255,255,255,.25);
+    border:3px solid #fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    flex-shrink:0;
+    cursor:pointer;
+    position:relative;
+  }
+  .photo-box img{width:100%;height:100%;object-fit:cover;}
+  .photo-box span{font-size:11px;color:#fff;text-align:center;padding:4px;}
+  .header-text{flex:1;}
+  .name{
+    font-size:30px;
+    font-weight:800;
+    outline:none;
+    line-height:1.2;
+  }
+  .role{
+    font-size:15px;
+    font-weight:500;
+    opacity:.95;
+    margin-top:4px;
+    outline:none;
+  }
+  .tagline{
+    font-size:13px;
+    margin-top:8px;
+    opacity:.9;
+    outline:none;
+  }
+
+  .body-grid{
+    padding:9mm 14mm 14mm;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:7mm 9mm;
+  }
+  .full{grid-column:1 / -1;}
+
+  .section{
+    background:#fafbff;
+    border:1px solid #eceef5;
+    border-radius:10px;
+    padding:8mm;
+    position:relative;
+  }
+  .section-title{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:14px;
+    font-weight:800;
+    color:var(--main);
+    margin-bottom:6mm;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+  }
+  .section-title .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--accent);
+    flex-shrink:0;
+  }
+  .editable{
+    outline:none;
+    min-height:1em;
+  }
+  .editable:empty:before{
+    content:attr(data-ph);
+    color:#aaa;
+  }
+
+  /* 정보 리스트 (연락처 등) */
+  .info-list{list-style:none;margin:0;padding:0;font-size:12.5px;}
+  .info-list li{
+    display:flex;
+    gap:6px;
+    padding:3px 0;
+    align-items:flex-start;
+  }
+  .info-list .ico{flex-shrink:0;}
+
+  /* 강점/스킬 바 */
+  .skill{margin-bottom:5mm;}
+  .skill-top{display:flex;justify-content:space-between;font-size:12.5px;font-weight:600;margin-bottom:3px;}
+  .skill-bar-bg{
+    height:8px;
+    background:#e7eaf3;
+    border-radius:6px;
+    overflow:hidden;
+  }
+  .skill-bar{
+    height:100%;
+    background:linear-gradient(90deg,var(--main),var(--main2));
+    border-radius:6px;
+    width:70%;
+  }
+  .skill[contenteditable="false"] .skill-bar{cursor:default;}
+
+  /* 타임라인 */
+  .timeline{position:relative;padding-left:18px;font-size:12.5px;}
+  .timeline:before{
+    content:"";
+    position:absolute;left:5px;top:4px;bottom:4px;
+    width:2px;background:#dde2f0;
+  }
+  .t-item{position:relative;margin-bottom:5mm;}
+  .t-item:before{
+    content:"";
+    position:absolute;left:-18px;top:3px;
+    width:10px;height:10px;border-radius:50%;
+    background:var(--accent);
+    border:2px solid #fff;
+    box-shadow:0 0 0 2px var(--accent);
+  }
+  .t-date{font-weight:700;color:var(--main);font-size:11.5px;}
+
+  /* 태그(취미/관심사) */
+  .tag-wrap{display:flex;flex-wrap:wrap;gap:6px;}
+  .tag{
+    background:#eef0fc;
+    color:var(--main);
+    font-size:11.5px;
+    font-weight:600;
+    padding:5px 10px;
+    border-radius:999px;
+  }
+
+  /* 통계 카드 */
+  .stat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5mm;text-align:center;}
+  .stat-num{font-size:22px;font-weight:800;color:var(--accent);}
+  .stat-label{font-size:11px;color:#777;margin-top:2px;}
+
+  .quote-box{
+    border-left:4px solid var(--accent);
+    padding:6mm 8mm;
+    font-style:italic;
+    font-size:13px;
+    color:#444;
+    background:#fff7f3;
+    border-radius:0 8px 8px 0;
+  }
+
+  .footer{
+    text-align:center;
+    font-size:10.5px;
+    color:#aaa;
+    padding-bottom:6mm;
+  }
+
+  /* 삭제 버튼 (편집 모드) */
+  .del-btn{
+    position:absolute;
+    top:4px;right:4px;
+    background:#ff5757;
+    color:#fff;
+    border:none;
+    border-radius:50%;
+    width:18px;height:18px;
+    font-size:11px;
+    line-height:18px;
+    cursor:pointer;
+    display:none;
+  }
+  .section:hover .del-btn{display:block;}
+
+  /* 인쇄 설정 */
+  @media print{
+    body{background:#fff;padding:0;}
+    .toolbar{display:none;}
+    .page{
+      box-shadow:none;
+      margin:0;
+      width:210mm;
+      min-height:297mm;
+    }
+    .photo-box span{display:none;}
+    .del-btn{display:none !important;}
+  }
+  @page{
+    size:A4;
+    margin:0;
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <button onclick="window.print()">🖨️ 인쇄 / PDF로 저장</button>
+  <button id="addSkillBtn">➕ 스킬 추가</button>
+  <button id="addTagBtn">➕ 태그 추가</button>
+  <button id="addTimelineBtn">➕ 연표 추가</button>
+  <div class="color-pick">
+    테마색
+    <input type="color" id="mainColor" value="#4f6df5">
+    <input type="color" id="accentColor" value="#ff7e5f">
+  </div>
+  <span class="hint">※ 글자/사진을 클릭해서 직접 입력하세요. 인쇄 시 A4 한 장에 맞춰져 있습니다.</span>
+</div>
+
+<div class="page" id="page">
+
+  <!-- 헤더 -->
+  <div class="header">
+    <div class="photo-box" id="photoBox" onclick="document.getElementById('photoInput').click()">
+      <span>사진<br>클릭하여<br>업로드</span>
+    </div>
+    <input type="file" id="photoInput" accept="image/*" style="display:none">
+    <div class="header-text">
+      <div class="name editable" contenteditable="true" data-ph="이름을 입력하세요">홍길동</div>
+      <div class="role editable" contenteditable="true" data-ph="학년/반/직업 등">○○고등학교 2학년 3반</div>
+      <div class="tagline editable" contenteditable="true" data-ph="나를 표현하는 한 줄 소개">긍정적인 에너지로 함께 성장하는 사람입니다.</div>
+    </div>
+  </div>
+
+  <div class="body-grid">
+
+    <!-- 자기소개 -->
+    <div class="section full">
+      <div class="section-title"><span class="dot"></span>About Me · 자기소개</div>
+      <div class="editable" contenteditable="true" data-ph="자신에 대해 자유롭게 소개해 주세요." style="font-size:13px;line-height:1.7;">
+        안녕하세요! 저는 새로운 것을 배우는 것을 좋아하고, 친구들과 협력하여 문제를 해결하는 것에 보람을 느끼는 사람입니다. 작은 목표부터 차근차근 이루어 나가며 꾸준히 성장하고 있습니다.
+      </div>
+    </div>
+
+    <!-- 연락처 / 기본정보 -->
+    <div class="section">
+      <div class="section-title"><span class="dot"></span>기본 정보</div>
+      <ul class="info-list">
+        <li><span class="ico">📧</span><span class="editable" contenteditable="true" data-ph="이메일">example@email.com</span></li>
+        <li><span class="ico">📱</span><span class="editable" contenteditable="true" data-ph="연락처">010-0000-0000</span></li>
+        <li><span class="ico">🏠</span><span class="editable" contenteditable="true" data-ph="거주지/주소">○○시 ○○구</span></li>
+        <li><span class="ico">🎯</span><span class="editable" contenteditable="true" data-ph="목표/꿈">나의 목표 / 꿈</span></li>
+      </ul>
+    </div>
+
+    <!-- 통계 카드 -->
+    <div class="section">
+      <div class="section-title"><span class="dot"></span>한눈에 보기</div>
+      <div class="stat-grid">
+        <div>
+          <div class="stat-num editable" contenteditable="true">3</div>
+          <div class="stat-label editable" contenteditable="true">동아리</div>
+        </div>
+        <div>
+          <div class="stat-num editable" contenteditable="true">5</div>
+          <div class="stat-label editable" contenteditable="true">수상경력</div>
+        </div>
+        <div>
+          <div class="stat-num editable" contenteditable="true">12</div>
+          <div class="stat-label editable" contenteditable="true">독서량(권)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 강점/역량 -->
+    <div class="section full" id="skillSection">
+      <div class="section-title"><span class="dot"></span>강점 & 역량</div>
+      <div class="skill">
+        <div class="skill-top"><span class="editable" contenteditable="true">리더십</span><span class="editable" contenteditable="true">85%</span></div>
+        <div class="skill-bar-bg"><div class="skill-bar" style="width:85%"></div></div>
+      </div>
+      <div class="skill">
+        <div class="skill-top"><span class="editable" contenteditable="true">협업 능력</span><span class="editable" contenteditable="true">90%</span></div>
+        <div class="skill-bar-bg"><div class="skill-bar" style="width:90%"></div></div>
+      </div>
+      <div class="skill">
+        <div class="skill-top"><span class="editable" contenteditable="true">창의력</span><span class="editable" contenteditable="true">75%</span></div>
+        <div class="skill-bar-bg"><div class="skill-bar" style="width:75%"></div></div>
+      </div>
+    </div>
+
+    <!-- 연표/경험 -->
+    <div class="section" id="timelineSection">
+      <div class="section-title"><span class="dot"></span>나의 발자취</div>
+      <div class="timeline">
+        <div class="t-item">
+          <div class="t-date editable" contenteditable="true">2024.03</div>
+          <div class="editable" contenteditable="true" data-ph="활동 내용">학급 부반장 활동</div>
+        </div>
+        <div class="t-item">
+          <div class="t-date editable" contenteditable="true">2024.09</div>
+          <div class="editable" contenteditable="true" data-ph="활동 내용">교내 과학 발표대회 참가</div>
+        </div>
+        <div class="t-item">
+          <div class="t-date editable" contenteditable="true">2025.05</div>
+          <div class="editable" contenteditable="true" data-ph="활동 내용">봉사 동아리 운영</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 취미/관심사 -->
+    <div class="section">
+      <div class="section-title"><span class="dot"></span>취미 & 관심사</div>
+      <div class="tag-wrap" id="tagWrap">
+        <span class="tag editable" contenteditable="true">독서</span>
+        <span class="tag editable" contenteditable="true">농구</span>
+        <span class="tag editable" contenteditable="true">그림 그리기</span>
+        <span class="tag editable" contenteditable="true">영화 감상</span>
+        <span class="tag editable" contenteditable="true">코딩</span>
+      </div>
+    </div>
+
+    <!-- 한마디 -->
+    <div class="section full">
+      <div class="section-title"><span class="dot"></span>나의 좌우명</div>
+      <div class="quote-box editable" contenteditable="true" data-ph="좌우명이나 인생관을 적어보세요.">
+        "포기하지 않으면 실패하지 않는다."
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">이 페이지는 직접 클릭하여 자유롭게 수정할 수 있습니다.</div>
+</div>
+
+<script>
+  // 사진 업로드
+  document.getElementById('photoInput').addEventListener('change', function(e){
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev){
+      const box = document.getElementById('photoBox');
+      box.innerHTML = '<img src="'+ev.target.result+'">';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // 테마 색상 변경
+  document.getElementById('mainColor').addEventListener('input', function(e){
+    document.documentElement.style.setProperty('--main', e.target.value);
+  });
+  document.getElementById('accentColor').addEventListener('input', function(e){
+    document.documentElement.style.setProperty('--accent', e.target.value);
+  });
+
+  // 스킬 추가
+  document.getElementById('addSkillBtn').addEventListener('click', function(){
+    const sec = document.getElementById('skillSection');
+    const div = document.createElement('div');
+    div.className = 'skill';
+    div.innerHTML = `
+      <div class="skill-top"><span class="editable" contenteditable="true">새 항목</span><span class="editable" contenteditable="true">70%</span></div>
+      <div class="skill-bar-bg"><div class="skill-bar" style="width:70%"></div></div>`;
+    sec.appendChild(div);
+  });
+
+  // 태그 추가
+  document.getElementById('addTagBtn').addEventListener('click', function(){
+    const wrap = document.getElementById('tagWrap');
+    const span = document.createElement('span');
+    span.className = 'tag editable';
+    span.contentEditable = 'true';
+    span.textContent = '새 태그';
+    wrap.appendChild(span);
+  });
+
+  // 연표 추가
+  document.getElementById('addTimelineBtn').addEventListener('click', function(){
+    const tl = document.querySelector('#timelineSection .timeline');
+    const div = document.createElement('div');
+    div.className = 't-item';
+    div.innerHTML = `
+      <div class="t-date editable" contenteditable="true">YYYY.MM</div>
+      <div class="editable" contenteditable="true" data-ph="활동 내용">새 활동 내용</div>`;
+    tl.appendChild(div);
+  });
+</script>
+
+</body>
+</html>

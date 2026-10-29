@@ -41,16 +41,6 @@ export function shade(hex: string, amount: number): string {
   return hslToHex(hsl[0], hsl[1], Math.max(0, Math.min(1, hsl[2] + amount / 100)));
 }
 
-/** 표현주의 "색 대비 강하게": 채도는 높이고 밝기는 더 밝게/더 어둡게 */
-export function boostContrast(hex: string): string {
-  const hsl = hexToHsl(hex);
-  if (!hsl) return hex;
-  const [h, s, l] = hsl;
-  const s2 = Math.min(1, s * 1.35 + 0.1);
-  const l2 = l > 0.5 ? Math.min(0.95, l + 0.1) : Math.max(0.08, l - 0.1);
-  return hslToHex(h, s2, l2);
-}
-
 /** 색 입력 칸(input type=color)에 넣을 수 있는 값으로 바꾸기 */
 export function toInputColor(c: string): string {
   return /^#[0-9a-f]{6}$/i.test(c) ? c : '#ffffff';

@@ -1,34 +1,29 @@
 /**
  * 작품 위에 겹쳐 그리는 도우미 그림
  *  - 대칭축(파란 점선), 대칭의 중심(보라 십자)
- *  - 원본·복사본 구분 표시
- *  - 학습 모드: 대응점·대응변·수직·같은 거리 표시
+ *  - 대칭이 어긋난 대칭 도형의 빨간 점선 표시
  *  - 고른 도형의 테두리와 손잡이, 그리는 중인 도형 미리보기
  * 모든 크기는 화면에서 같은 크기로 보이도록 확대 배율(z)로 나눈다.
  */
 import type { ReactNode, SVGProps } from 'react';
-import type { Doc, DrawStyle, OwnSymmetry, Settings, Shape, SymFigure, ToolId, Vec } from '../../types';
+import type { Doc, DrawStyle, Settings, Shape, SymFigure, ToolId, Vec } from '../../types';
 import {
-
   extendedLine,
   hasVertexHandles,
   interiorAngles,
   isPolygonKind,
   polyPath,
   shapeBounds,
-  shapeEdges,
   smoothPath,
 } from '../../geometry/shapes';
-import { add, boxOf, dist, dot, footOnLine, lineAngleForDisplay, mid, mul, norm, sub, unionBox, vec, type Box } from '../../geometry/vec';
-import { POINT_NAMES, figNumText, sampleIndices } from '../../geometry/symmetry';
+import { add, boxOf, dist, dot, lineAngleForDisplay, mid, mul, norm, sub, unionBox, vec, type Box } from '../../geometry/vec';
+import { figNumText } from '../../geometry/symmetry';
 import { FONT } from '../art/Artwork';
 
 export const AXIS_COLOR = '#2F6FED';
 export const CENTER_COLOR = '#8B3DFF';
 const SEL_COLOR = '#0E7C66';
 const WARN_COLOR = '#E5484D';
-const OWN_COLOR = '#F08C00';
-const EDGE_COLORS = ['#E4572E', '#17BEBB', '#F4B400', '#76B041', '#9C6ADE', '#F28482', '#3A86FF', '#8D6E63'];
 
 export type Live =
   | { kind: 'draw'; tool: ToolId; a: Vec; b: Vec; pts?: Vec[] }
@@ -52,7 +47,7 @@ function Pill({ at, text, z, color = '#1d2a4d', bg = '#ffffff', size = 14 }: { a
   );
 }
 
-/** 도형의 테두리 모양만 (구분 표시·대응변 등에 사용) */
+/** 도형의 테두리 모양만 (어긋난 대칭 도형 표시에 사용) */
 function Outline({ s, z, ...rest }: { s: Shape; z: number } & SVGProps<SVGPathElement>) {
   if (s.kind === 'circle') {
     return <circle cx={s.points[0].x} cy={s.points[0].y} r={dist(s.points[0], s.points[1] ?? s.points[0])} fill="none" {...(rest as SVGProps<SVGCircleElement>)} />;
@@ -96,21 +91,6 @@ function CenterMark({ p, z, color = CENTER_COLOR, active = false }: { p: Vec; z:
   );
 }
 
-/** 선분 가운데에 작은 눈금(같은 길이 표시) */
-function Tick({ a, b, z, count = 1, color = '#1d2a4d' }: { a: Vec; b: Vec; z: number; count?: number; color?: string }) {
-  const m = mid(a, b);
-  const d = norm(sub(b, a));
-  const n = vec(-d.y, d.x);
-  const s = 7 / z;
-  const gap = 4 / z;
-  const out: ReactNode[] = [];
-  for (let i = 0; i < count; i++) {
-    const c = add(m, mul(d, (i - (count - 1) / 2) * gap));
-    out.push(<path key={i} d={`M${c.x - n.x * s} ${c.y - n.y * s}L${c.x + n.x * s} ${c.y + n.y * s}`} stroke={color} strokeWidth={2 / z} />);
-  }
-  return <g pointerEvents="none">{out}</g>;
-}
-
 interface Props {
   doc: Doc;
   z: number;
@@ -121,7 +101,6 @@ interface Props {
   activeAxisId: string | null;
   activeCenterId: string | null;
   guideSel: { kind: 'axis' | 'center'; id: string } | null;
-  ownSym: OwnSymmetry | null;
   brokenFigs: Set<string>;
   live: Live;
   draft: Vec[];
@@ -189,27 +168,21 @@ export function Overlays(p: Props) {
     out.push(<Pill key="axis-label" at={add(mid(activeAxis.p1, activeAxis.p2), vec(0, 0))} text="대칭축" z={z} color={AXIS_COLOR} />);
   }
 
-  // ── 2. 원본·복사본 구분 표시 ──
-  if (settings.copyMarks) {
-    for (const fig of doc.figures) {
-      const color = p.brokenFigs.has(fig.id) ? WARN_COLOR : fig.type === 'line' ? AXIS_COLOR : CENTER_COLOR;
-      const tag = `${fig.type === 'line' ? '선' : '점'}${figNumText(fig.num)}`;
-      const copies = fig.pairs.map((q) => byId.get(q.copy)).filter(Boolean) as Shape[];
-      const origs = fig.pairs.map((q) => byId.get(q.orig)).filter(Boolean) as Shape[];
-      for (const c of copies) {
-        out.push(<Outline key={`cm-${fig.id}-${c.id}`} s={c} z={z} stroke={color} strokeWidth={2.5 / z} strokeDasharray={`${6 / z} ${5 / z}`} pointerEvents="none" />);
-      }
-      if (origs.length && copies.length) {
-        const ob = unionBox(origs.map(shapeBounds));
-        const cb = unionBox(copies.map(shapeBounds));
-        const broken = p.brokenFigs.has(fig.id);
-        out.push(<Pill key={`tg-o-${fig.id}`} at={vec(ob.x + ob.w / 2, ob.y - 16 / z)} text={`${tag} 원본`} z={z} color={color} size={12} />);
-        out.push(<Pill key={`tg-c-${fig.id}`} at={vec(cb.x + cb.w / 2, cb.y - 16 / z)} text={`${tag}′ 복사${broken ? ' ⚠' : ''}`} z={z} color="#fff" bg={color} size={12} />);
-      }
+  // ── 2. 대칭이 어긋난 대칭 도형: 빨간 점선과 ⚠ 이름표로 어디를 고쳐야 할지 알려 준다 ──
+  for (const fig of doc.figures) {
+    if (!p.brokenFigs.has(fig.id)) continue;
+    const members = fig.pairs.flatMap((q) => [byId.get(q.orig), byId.get(q.copy)]).filter(Boolean) as Shape[];
+    for (const m of members) {
+      out.push(<Outline key={`bk-${fig.id}-${m.id}`} s={m} z={z} stroke={WARN_COLOR} strokeWidth={2.5 / z} strokeDasharray={`${6 / z} ${5 / z}`} pointerEvents="none" />);
+    }
+    if (members.length) {
+      const b = unionBox(members.map(shapeBounds));
+      const tag = `${fig.type === 'line' ? '선대칭' : '점대칭'} ${figNumText(fig.num)} ⚠ 대칭 확인`;
+      out.push(<Pill key={`bk-tag-${fig.id}`} at={vec(b.x + b.w / 2, b.y - 16 / z)} text={tag} z={z} color="#fff" bg={WARN_COLOR} size={12} />);
     }
   }
 
-  // ── 3. 고른 대칭 도형의 대칭축/중심 + 학습 모드 ──
+  // ── 3. 고른 대칭 도형의 대칭축/중심 ──
   const selFigs = doc.figures.filter((f) => f.pairs.some((q) => selSet.has(q.orig) || selSet.has(q.copy)));
   for (const fig of selFigs) {
     const members = fig.pairs.flatMap((q) => [byId.get(q.orig), byId.get(q.copy)]).filter(Boolean) as Shape[];
@@ -225,17 +198,8 @@ export function Overlays(p: Props) {
       out.push(<Pill key={`fcl-${fig.id}`} at={add(fig.center, vec(0, 30 / z))} text="대칭의 중심" z={z} color={CENTER_COLOR} size={12} />);
     }
   }
-  if (settings.learning && selFigs.length) out.push(<Learning key="learn" fig={selFigs[0]} byId={byId} z={z} cell={cell} />);
 
-  // ── 4. 도형 스스로의 대칭 찾기 결과 ──
-  if (p.ownSym) {
-    p.ownSym.axes.forEach(([a, b], i) => {
-      out.push(<path key={`own-${i}`} d={polyPath([a, b], false)} stroke={OWN_COLOR} strokeWidth={3 / z} strokeDasharray={`${14 / z} ${6 / z} ${3 / z} ${6 / z}`} pointerEvents="none" />);
-    });
-    if (p.ownSym.center) out.push(<CenterMark key="own-c" p={p.ownSym.center} z={z} color={OWN_COLOR} />);
-  }
-
-  // ── 5. 고른 도형의 테두리, 각도·좌표, 손잡이 ──
+  // ── 4. 고른 도형의 테두리, 각도·좌표, 손잡이 ──
   const selShapes = p.selection.map((id) => byId.get(id)).filter(Boolean) as Shape[];
   for (const s of selShapes) {
     const b = shapeBounds(s);
@@ -280,7 +244,7 @@ export function Overlays(p: Props) {
     }
   }
 
-  // ── 6. 그리는 중인 모습 ──
+  // ── 5. 그리는 중인 모습 ──
   const ds = p.drawStyle;
   const ghost = { stroke: ds.stroke, strokeWidth: Math.max(ds.strokeWidth, 2 / z), fill: ds.fill, opacity: 0.6, pointerEvents: 'none' as const };
   const live = p.live;
@@ -330,83 +294,3 @@ export function Overlays(p: Props) {
 
   return <g className="overlays">{out}</g>;
 }
-
-/** 학습 모드: 대응점, 대응변, 수직·같은 거리 표시 */
-function Learning({ fig, byId, z, cell }: { fig: SymFigure; byId: Map<string, Shape>; z: number; cell: (px: number) => number }) {
-  const out: ReactNode[] = [];
-  let nameIdx = 0;
-  const color = fig.type === 'line' ? AXIS_COLOR : CENTER_COLOR;
-  let shownPairs = 0;
-  let arcDone = false;
-  for (const pair of fig.pairs) {
-    const a = byId.get(pair.orig);
-    const b = byId.get(pair.copy);
-    if (!a || !b || a.points.length !== b.points.length) continue;
-    // 대응변: 같은 색으로 칠해서 어느 변끼리 짝인지 보여 준다
-    const ea = shapeEdges(a);
-    const eb = shapeEdges(b);
-    if (a.kind !== 'line') {
-      ea.forEach(([p1, p2], i) => {
-        const c = EDGE_COLORS[i % EDGE_COLORS.length];
-        out.push(<path key={`ea-${pair.orig}-${i}`} d={polyPath([p1, p2], false)} stroke={c} strokeWidth={6 / z} strokeOpacity={0.75} strokeLinecap="round" pointerEvents="none" />);
-        if (eb[i]) out.push(<path key={`eb-${pair.copy}-${i}`} d={polyPath(eb[i], false)} stroke={c} strokeWidth={6 / z} strokeOpacity={0.75} strokeLinecap="round" pointerEvents="none" />);
-      });
-    }
-    for (const i of sampleIndices(a)) {
-      if (shownPairs >= 10) break;
-      shownPairs++;
-      const P = a.points[i];
-      const Q = b.points[i];
-      const name = POINT_NAMES[nameIdx++ % POINT_NAMES.length];
-      const same = dist(P, Q) < 1.5;
-      if (fig.type === 'line' && fig.axis) {
-        const [s, e] = fig.axis;
-        const F = footOnLine(P, s, e);
-        if (same) {
-          out.push(<circle key={`on-${pair.orig}-${i}`} cx={P.x} cy={P.y} r={12 / z} fill="none" stroke={color} strokeWidth={3 / z} pointerEvents="none" />);
-          out.push(<Pill key={`onl-${pair.orig}-${i}`} at={add(P, vec(0, -26 / z))} text={`점 ${name}: 축 위라서 그대로!`} z={z} color={color} size={12} />);
-          continue;
-        }
-        out.push(<path key={`pq-${pair.orig}-${i}`} d={polyPath([P, Q], false)} stroke="#475467" strokeWidth={2 / z} strokeDasharray={`${6 / z} ${5 / z}`} pointerEvents="none" />);
-        // 직각 표시
-        const d = norm(sub(e, s));
-        const n = norm(sub(P, F));
-        const k = 12 / z;
-        const c1 = add(F, mul(n, k));
-        const c2 = add(add(F, mul(n, k)), mul(d, k));
-        const c3 = add(F, mul(d, k));
-        out.push(<path key={`ra-${pair.orig}-${i}`} d={`M${c1.x} ${c1.y}L${c2.x} ${c2.y}L${c3.x} ${c3.y}`} fill="none" stroke={color} strokeWidth={2 / z} pointerEvents="none" />);
-        out.push(<Tick key={`t1-${pair.orig}-${i}`} a={P} b={F} z={z} count={(i % 3) + 1} />);
-        out.push(<Tick key={`t2-${pair.orig}-${i}`} a={F} b={Q} z={z} count={(i % 3) + 1} />);
-        if (shownPairs <= 4) out.push(<Pill key={`dl-${pair.orig}-${i}`} at={add(mid(P, F), mul(d, 16 / z))} text={`${cell(dist(P, F))}칸`} z={z} color="#344054" size={11} />);
-        if (shownPairs <= 4) out.push(<Pill key={`dr-${pair.orig}-${i}`} at={add(mid(F, Q), mul(d, 16 / z))} text={`${cell(dist(F, Q))}칸`} z={z} color="#344054" size={11} />);
-      } else if (fig.center) {
-        const C = fig.center;
-        if (same) continue;
-        out.push(<path key={`pq-${pair.orig}-${i}`} d={polyPath([P, Q], false)} stroke="#475467" strokeWidth={2 / z} strokeDasharray={`${6 / z} ${5 / z}`} pointerEvents="none" />);
-        out.push(<Tick key={`t1-${pair.orig}-${i}`} a={P} b={C} z={z} count={(i % 3) + 1} />);
-        out.push(<Tick key={`t2-${pair.orig}-${i}`} a={C} b={Q} z={z} count={(i % 3) + 1} />);
-        if (shownPairs <= 3) {
-          const off = vec(0, -14 / z);
-          out.push(<Pill key={`dl-${pair.orig}-${i}`} at={add(mid(P, C), off)} text={`${cell(dist(P, C))}칸`} z={z} color="#344054" size={11} />);
-          out.push(<Pill key={`dr-${pair.orig}-${i}`} at={add(mid(C, Q), off)} text={`${cell(dist(C, Q))}칸`} z={z} color="#344054" size={11} />);
-        }
-        if (!arcDone && dist(P, C) > 30 / z) {
-          // 180° 돌아가는 화살표
-          arcDone = true;
-          const r = Math.min(46 / z, dist(P, C) * 0.6);
-          const u = norm(sub(P, C));
-          const s0 = add(C, mul(u, r));
-          const s1 = add(C, mul(u, -r));
-          out.push(<path key="arc" d={`M${s0.x} ${s0.y}A${r} ${r} 0 0 1 ${s1.x} ${s1.y}`} fill="none" stroke={color} strokeWidth={3 / z} markerEnd="url(#ed-arrow)" pointerEvents="none" />);
-          const perp = vec(-u.y, u.x);
-          out.push(<Pill key="arcl" at={add(C, mul(perp, -r - 16 / z))} text="180°" z={z} color={color} size={12} />);
-        }
-      }
-      out.push(<Pill key={`n1-${pair.orig}-${i}`} at={add(P, vec(-14 / z, -18 / z))} text={name} z={z} color={color} size={13} />);
-      out.push(<Pill key={`n2-${pair.copy}-${i}`} at={add(Q, vec(14 / z, -18 / z))} text={`${name}′`} z={z} color="#fff" bg={color} size={13} />);
-    }
-  }
-  return <g pointerEvents="none">{out}</g>;
-}
-

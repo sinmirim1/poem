@@ -104,8 +104,6 @@ export function LeftToolbar() {
         <div className="toggles">
           <Toggle label="대칭축 보이기" on={settings.showAxes} onChange={(v) => set({ showAxes: v })} />
           <Toggle label="중심점 보이기" on={settings.showCenters} onChange={(v) => set({ showCenters: v })} />
-          <Toggle label="원본·복사본 구분" on={settings.copyMarks} onChange={(v) => set({ copyMarks: v })} />
-          <Toggle label="학습 모드" on={settings.learning} onChange={(v) => set({ learning: v })} />
         </div>
         <button className="btn small block" onClick={act.checkAll}>
           <Icon name="check" size={18} /> 대칭 모두 검사하기
@@ -126,6 +124,9 @@ export function LeftToolbar() {
           <ActBtn icon="copy" label="복제" onClick={act.duplicate} title="고른 도형 복제 (Ctrl+D)" />
           <ActBtn icon="trash" label="지우기" onClick={act.remove} title="고른 도형 지우기 (Delete)" />
         </div>
+        <button className="btn small block danger-outline" onClick={act.clearAll} title="도화지의 도형·대칭축·중심점을 모두 지워요">
+          <Icon name="trash" size={18} /> 전체 그림 지우기
+        </button>
       </Section>
     </aside>
   );

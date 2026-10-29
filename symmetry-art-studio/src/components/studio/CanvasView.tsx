@@ -54,7 +54,11 @@ const HitLayer = memo(function HitLayer({ shapes, z }: { shapes: Shape[]; z: num
           case 'line':
             return <path key={s.id} d={polyPath(extendedLine(s.points[0], s.points[1] ?? p0), false)} fill="none" pointerEvents="stroke" {...common} />;
           case 'freehand':
-            return <path key={s.id} d={smoothPath(s.points)} fill="none" pointerEvents="stroke" {...common} />;
+            return s.fill === 'none' ? (
+              <path key={s.id} d={smoothPath(s.points)} fill="none" pointerEvents="stroke" {...common} />
+            ) : (
+              <path key={s.id} d={smoothPath(s.points) + ' Z'} fill="transparent" pointerEvents="all" {...common} />
+            );
           case 'text':
           case 'bubble': {
             const b = shapeBounds(s);
@@ -537,7 +541,12 @@ export function CanvasView() {
       const tooSmall = dist(a, b) < 6;
       if (g.tool === 'freehand') {
         if (g.pts.length < 2) return;
-        commitShape(newShape('freehand', simplifyPath(g.pts, 1.2)));
+        const pts = simplifyPath(g.pts, 1.2);
+        // 처음 점 가까이에서 끝내면 닫힌 도형으로 이어 준다 (오른쪽에서 색을 채울 수 있게)
+        const closed = pts.length > 3 && dist(pts[0], pts[pts.length - 1]) < 24 / viewRef.current.zoom;
+        if (closed) pts[pts.length - 1] = pts[0];
+        commitShape(newShape('freehand', pts));
+        if (closed) toast('닫힌 도형이 되었어요. 오른쪽 "채우기 색"에서 색을 칠해 보세요.', 'good');
         return;
       }
       if (tooSmall) {
@@ -652,9 +661,6 @@ export function CanvasView() {
           <pattern id="ed-grid5" width={grid * 4} height={grid * 4} patternUnits="userSpaceOnUse">
             <path d={`M${grid * 4} 0V${grid * 4}H0`} fill="none" stroke={gridColor} strokeWidth={2 / z} strokeOpacity={0.6} />
           </pattern>
-          <marker id="ed-arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-            <path d="M0 0L10 5L0 10z" fill="#8B3DFF" />
-          </marker>
         </defs>
         <g transform={`translate(${view.x} ${view.y}) scale(${z})`}>
           <rect x={-6 / z} y={-6 / z} width={PAPER.w + 12 / z} height={PAPER.h + 12 / z} fill="#c9d2e3" rx={4 / z} />
@@ -691,7 +697,6 @@ export function CanvasView() {
                 activeAxisId={state.activeAxisId}
                 activeCenterId={state.activeCenterId}
                 guideSel={state.guideSel}
-                ownSym={state.ownSym}
                 brokenFigs={brokenFigs}
                 live={live}
                 draft={draft}

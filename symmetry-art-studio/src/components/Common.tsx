@@ -65,7 +65,7 @@ export function HowToModal({ onClose }: { onClose: () => void }) {
           <i className="lg-center" /> 보라색 십자 = 대칭의 중심
         </span>
         <span>
-          <i className="lg-copy" /> 점선 테두리 = 대칭으로 복사된 도형
+          <i className="lg-copy" /> 빨간 점선 = 대칭이 어긋난 도형 (눌러서 힌트 보기)
         </span>
       </div>
       <h3 className="mt">키보드로 더 빠르게</h3>

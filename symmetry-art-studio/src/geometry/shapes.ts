@@ -107,13 +107,6 @@ export function stretchShape(s: Shape, kx: number, ky: number, c = shapeCenter(s
   return transformShape(s, (p) => vec(c.x + (p.x - c.x) * kx, c.y + (p.y - c.y) * ky));
 }
 
-/** 도형을 옆으로 기울인다 (밀기 변형) */
-export function skewShape(s: Shape, k: number): Shape {
-  if (s.kind === 'text' || s.kind === 'bubble' || s.kind === 'circle') return s;
-  const c = shapeCenter(s);
-  return transformShape(s, (p) => vec(p.x + (p.y - c.y) * k, p.y));
-}
-
 /** 도형을 제자리에서 뒤집는다 (horizontal: 좌우, 아니면 위아래) */
 export function flipShape(s: Shape, horizontal: boolean): Shape {
   if (s.kind === 'text' || s.kind === 'bubble') return s;

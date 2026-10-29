@@ -3,44 +3,14 @@ import { useEffect, useState, type ReactNode } from 'react';
 import type { BgType, Shape } from '../../types';
 import { useStore } from '../../state/store';
 import { Icon } from '../Icon';
-import { ART_STYLES, BASIC_COLORS, EMOTIONS, STYLE_ORDER } from '../../data/artStyles';
+import { ART_STYLES, BASIC_COLORS, STYLE_ORDER } from '../../data/artStyles';
 import { STICKERS } from '../../data/stickers';
-import { KIND_NAMES, canMirror, flipShape, shapeCenter, skewShape, stretchShape, transformShape, translateShape } from '../../geometry/shapes';
+import { KIND_NAMES, flipShape, shapeCenter, transformShape, translateShape } from '../../geometry/shapes';
 import { lineAngleForDisplay, rotateAround, vec } from '../../geometry/vec';
-import { checkFigure, figTitle, figureMembers, figuresOfShape, findOwnSymmetry } from '../../geometry/symmetry';
-import { dissolveFigure, editShapes, fixFigure, groupBounds, groupCenter, linkedGroup, moveGroup, scaleGroup, setFigureLinked, splitShapes, styleShapes } from '../../state/ops';
-import { boostContrast, toInputColor } from '../../utils/color';
+import { checkFigure, figTitle, figureMembers, figuresOfShape } from '../../geometry/symmetry';
+import { dissolveFigure, fixFigure, setFigureLinked, splitShapes, styleShapes } from '../../state/ops';
+import { toInputColor } from '../../utils/color';
 import { useActions } from './useActions';
-import type { EmotionId } from '../../types';
-
-/** 숫자 입력 칸: 다 쓰고 Enter를 누르거나 다른 곳을 누르면 적용 */
-function NumField({ label, value, onCommit, suffix }: { label: string; value: number; onCommit: (n: number) => void; suffix?: string }) {
-  const [text, setText] = useState(String(value));
-  const [editing, setEditing] = useState(false);
-  useEffect(() => {
-    if (!editing) setText(String(value));
-  }, [value, editing]);
-  const commit = () => {
-    setEditing(false);
-    const n = parseFloat(text);
-    if (Number.isFinite(n) && n !== value) onCommit(n);
-    else setText(String(value));
-  };
-  return (
-    <label className="num-field">
-      <span>{label}</span>
-      <input
-        inputMode="decimal"
-        value={text}
-        onFocus={() => setEditing(true)}
-        onChange={(e) => setText(e.target.value)}
-        onBlur={commit}
-        onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
-      />
-      {suffix && <em>{suffix}</em>}
-    </label>
-  );
-}
 
 function Swatches({ colors, value, onPick, allowNone }: { colors: string[]; value: string; onPick: (c: string) => void; allowNone?: boolean }) {
   return (
@@ -71,7 +41,7 @@ function Card({ title, children, tone }: { title?: ReactNode; children: ReactNod
 function usePalette() {
   const { state } = useStore();
   const style = state.style ? ART_STYLES[state.style] : null;
-  const main = state.style === 'expression' ? EMOTIONS[state.emotion].colors : style?.palette ?? [];
+  const main = style?.palette ?? [];
   return [...new Set([...main, ...BASIC_COLORS].map((c) => c.toUpperCase()))];
 }
 
@@ -82,7 +52,6 @@ function PropertiesTab() {
   const palette = usePalette();
   const { doc, selection, settings, drawStyle } = state;
   const grid = settings.gridSize;
-  const cells = (px: number) => Math.round((px / grid) * 10) / 10;
   const byId = new Map(doc.shapes.map((s) => [s.id, s]));
   const sel = selection.map((id) => byId.get(id)).filter(Boolean) as Shape[];
   const first = sel[0];
@@ -112,46 +81,22 @@ function PropertiesTab() {
     );
   }
 
-  const gb = sel.length ? groupBounds(doc, selection) : null;
-  const gc = sel.length ? groupCenter(doc, selection) : null;
   const single = sel.length === 1 ? first : null;
   const figs = single ? figuresOfShape(doc, single.id) : [];
-  const own = state.ownSym && single && state.ownSym.shapeId === single.id ? state.ownSym : null;
+  const name = sel.length ? (single ? single.label ?? KIND_NAMES[single.kind] : `도형 ${sel.length}개`) : '새로 그릴 도형';
+  // 선분·직선·점은 면이 없어서 채우기 색이 없다. 자유선은 칠하면 닫힌 도형이 된다.
+  const showFill = !single || (single.kind !== 'segment' && single.kind !== 'line' && single.kind !== 'point');
 
   return (
     <div className="panel-body">
-      <Card title={sel.length ? (single ? `${single.label ?? KIND_NAMES[single.kind]}` : `도형 ${sel.length}개`) : '새로 그릴 도형'}>
-        {!sel.length && <p className="muted">도화지의 도형을 누르면 그 도형을 꾸밀 수 있어요. 지금 고르는 색은 앞으로 그릴 도형에 쓰여요.</p>}
-        {sel.length > 0 && gb && gc && (
+      <Card
+        title={
           <>
-            <div className="num-row">
-              <NumField label="가로 위치" value={cells(gc.x)} suffix="칸" onCommit={(n) => act.setDoc(moveGroup(doc, linkedGroup(doc, selection), vec(n * grid - gc.x, 0)))} />
-              <NumField label="세로 위치" value={cells(gc.y)} suffix="칸" onCommit={(n) => act.setDoc(moveGroup(doc, linkedGroup(doc, selection), vec(0, n * grid - gc.y)))} />
-            </div>
-            {single?.kind === 'text' || single?.kind === 'bubble' ? (
-              <div className="num-row">
-                <NumField label="글자 크기" value={single.fontSize ?? 40} onCommit={(n) => act.setDoc(styleShapes(doc, selection, { fontSize: Math.max(10, Math.min(300, n)) }))} />
-              </div>
-            ) : single?.kind === 'circle' ? (
-              <div className="num-row">
-                <NumField label="지름" value={cells(gb.w)} suffix="칸" onCommit={(n) => n > 0 && gb.w > 0 && act.setDoc(scaleGroup(doc, linkedGroup(doc, selection), gc, (n * grid) / gb.w))} />
-              </div>
-            ) : (
-              <div className="num-row">
-                <NumField label="가로 크기" value={cells(gb.w)} suffix="칸" onCommit={(n) => n > 0 && gb.w > 0 && act.setDoc(editShapes(doc, selection, (s) => stretchShape(s, (n * grid) / gb.w, 1, gc)))} />
-                <NumField label="세로 크기" value={cells(gb.h)} suffix="칸" onCommit={(n) => n > 0 && gb.h > 0 && act.setDoc(editShapes(doc, selection, (s) => stretchShape(s, 1, (n * grid) / gb.h, gc)))} />
-              </div>
-            )}
-            <div className="num-row">
-              <NumField label="회전 각도" value={first.rotation} suffix="°" onCommit={(n) => act.rotateSel(n - first.rotation)} />
-              <div className="mini-btns">
-                <button className="btn tiny" onClick={() => act.rotateSel(-15)} title="시계 반대 방향 15°">↺15°</button>
-                <button className="btn tiny" onClick={() => act.rotateSel(15)} title="시계 방향 15°">↻15°</button>
-                <button className="btn tiny" onClick={() => act.rotateSel(180)} title="180° 돌리기">180°</button>
-              </div>
-            </div>
+            색과 선 <span className="badge soft">{name}</span>
           </>
-        )}
+        }
+      >
+        {!sel.length && <p className="muted small">도화지의 도형을 누르면 그 도형을 꾸밀 수 있어요. 지금 고르는 색은 앞으로 그릴 도형에 쓰여요.</p>}
         {single && (single.kind === 'text' || single.kind === 'bubble') && (
           <label className="text-field">
             <span>글자 내용</span>
@@ -161,6 +106,53 @@ function PropertiesTab() {
               onFocus={() => dispatch({ type: 'checkpoint' })}
               onChange={(e) => dispatch({ type: 'doc', doc: styleShapes(doc, [single.id], { text: e.target.value }) })}
             />
+          </label>
+        )}
+        {showFill && (
+          <div className="prop">
+            <span className="prop-label">{single?.kind === 'text' ? '글자 색' : single?.kind === 'bubble' ? '말풍선 색' : '채우기 색'}</span>
+            <Swatches colors={palette} value={look.fill} onPick={(c) => act.applyStyle({ fill: c })} allowNone={!single || (single.kind !== 'text' && single.kind !== 'bubble')} />
+            {single?.kind === 'freehand' && <p className="muted small">자유선에 색을 칠하면 시작점과 끝점이 이어진 닫힌 도형으로 채워져요.</p>}
+          </div>
+        )}
+        <div className="prop">
+          <span className="prop-label">{single?.kind === 'bubble' ? '테두리·글자 색' : single?.kind === 'point' ? '점 색' : '선 색'}</span>
+          <Swatches colors={palette} value={look.stroke} onPick={(c) => act.applyStyle({ stroke: c })} />
+        </div>
+        <div className="prop">
+          <span className="prop-label">
+            선 굵기 <b>{look.strokeWidth}</b>
+          </span>
+          <input type="range" min={1} max={30} value={look.strokeWidth} onPointerDown={sliderStart} onChange={(e) => sliderChange({ strokeWidth: Number(e.target.value) })} aria-label="선 굵기" />
+        </div>
+        <div className="prop">
+          <span className="prop-label">선 모양</span>
+          <div className="seg">
+            {(
+              [
+                ['solid', '보통'],
+                ['dashed', '점선'],
+                ['brush', '붓터치'],
+              ] as const
+            ).map(([v, label]) => (
+              <button key={v} className={look.lineStyle === v ? 'on' : ''} onClick={() => act.applyStyle({ lineStyle: v })}>
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="prop">
+          <span className="prop-label">
+            투명도 <b>{Math.round(look.opacity * 100)}%</b>
+          </span>
+          <input type="range" min={10} max={100} value={Math.round(look.opacity * 100)} onPointerDown={sliderStart} onChange={(e) => sliderChange({ opacity: Number(e.target.value) / 100 })} aria-label="투명도" />
+        </div>
+        {sel.length > 0 && (
+          <label className={`toggle${first.shadow ? ' on' : ''}`}>
+            <input type="checkbox" checked={!!first.shadow} onChange={(e) => act.setDoc(styleShapes(doc, selection, { shadow: e.target.checked }))} />
+            <Icon name="shadow" size={18} />
+            <span>떠 있는 그림자</span>
+            <i aria-hidden="true" />
           </label>
         )}
       </Card>
@@ -221,76 +213,6 @@ function PropertiesTab() {
         );
       })}
 
-      {single && canMirror(single) && single.kind !== 'point' && single.kind !== 'line' && single.kind !== 'freehand' && (
-        <Card>
-          <button className="btn small block" onClick={() => dispatch({ type: 'ui', patch: { ownSym: own ? null : findOwnSymmetry(single) } })}>
-            <Icon name="search" size={18} /> {own ? '대칭 찾기 결과 숨기기' : '이 도형의 대칭 찾아보기'}
-          </button>
-          {own && (
-            <div className="own-result">
-              {own.infinite ? (
-                <p>원은 중심을 지나는 모든 직선이 대칭축이에요! (대칭축이 셀 수 없이 많아요) 원의 중심을 대칭의 중심으로 하는 점대칭도형이기도 해요.</p>
-              ) : (
-                <>
-                  <p>{own.axes.length ? `선대칭도형이에요. 대칭축이 ${own.axes.length}개 있어요. (주황 점선)` : '선대칭도형은 아니에요.'}</p>
-                  <p>{own.center ? '점대칭도형이에요. 대칭의 중심은 주황 점이에요.' : '점대칭도형은 아니에요.'}</p>
-                </>
-              )}
-              <p className="muted small">※ 프로젝트 조건의 개수는 "선대칭 복사·점대칭 복사"로 만든 대칭 도형으로 세요.</p>
-            </div>
-          )}
-        </Card>
-      )}
-
-      <Card title="색과 선">
-        {(!single || (single.kind !== 'segment' && single.kind !== 'line' && single.kind !== 'freehand' && single.kind !== 'point')) && (
-          <div className="prop">
-            <span className="prop-label">{single?.kind === 'text' ? '글자 색' : single?.kind === 'bubble' ? '말풍선 색' : '채우기 색'}</span>
-            <Swatches colors={palette} value={look.fill} onPick={(c) => act.applyStyle({ fill: c })} allowNone={!single || (single.kind !== 'text' && single.kind !== 'bubble')} />
-          </div>
-        )}
-        <div className="prop">
-          <span className="prop-label">{single?.kind === 'bubble' ? '테두리·글자 색' : single?.kind === 'point' ? '점 색' : '선 색'}</span>
-          <Swatches colors={palette} value={look.stroke} onPick={(c) => act.applyStyle({ stroke: c })} />
-        </div>
-        <div className="prop">
-          <span className="prop-label">
-            선 굵기 <b>{look.strokeWidth}</b>
-          </span>
-          <input type="range" min={1} max={30} value={look.strokeWidth} onPointerDown={sliderStart} onChange={(e) => sliderChange({ strokeWidth: Number(e.target.value) })} aria-label="선 굵기" />
-        </div>
-        <div className="prop">
-          <span className="prop-label">선 모양</span>
-          <div className="seg">
-            {(
-              [
-                ['solid', '보통'],
-                ['dashed', '점선'],
-                ['brush', '붓터치'],
-              ] as const
-            ).map(([v, label]) => (
-              <button key={v} className={look.lineStyle === v ? 'on' : ''} onClick={() => act.applyStyle({ lineStyle: v })}>
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="prop">
-          <span className="prop-label">
-            투명도 <b>{Math.round(look.opacity * 100)}%</b>
-          </span>
-          <input type="range" min={10} max={100} value={Math.round(look.opacity * 100)} onPointerDown={sliderStart} onChange={(e) => sliderChange({ opacity: Number(e.target.value) / 100 })} aria-label="투명도" />
-        </div>
-        {sel.length > 0 && (
-          <label className={`toggle${first.shadow ? ' on' : ''}`}>
-            <input type="checkbox" checked={!!first.shadow} onChange={(e) => act.setDoc(styleShapes(doc, selection, { shadow: e.target.checked }))} />
-            <Icon name="shadow" size={18} />
-            <span>떠 있는 그림자</span>
-            <i aria-hidden="true" />
-          </label>
-        )}
-      </Card>
-
       {sel.length > 0 && (
         <Card title="겹치는 순서">
           <div className="row-btns">
@@ -349,7 +271,7 @@ function StyleTab() {
   const targets = selection.length ? selection : doc.shapes.map((s) => s.id);
   const targetText = selection.length ? '고른 도형' : '모든 도형';
   const setBg = (patch: Partial<typeof doc.background>) => act.setDoc({ ...doc, background: { ...doc.background, ...patch } });
-  const fillColors = st.id === 'expression' ? EMOTIONS[state.emotion].colors : st.palette;
+  const fillColors = st.palette;
 
   const Tool = ({ icon, label, onClick, title }: { icon: string; label: string; onClick: () => void; title?: string }) => (
     <button className="tool-btn wide" onClick={onClick} title={title ?? label}>
@@ -375,7 +297,7 @@ function StyleTab() {
       shapes: doc.shapes.map((s) => {
         if (!want.has(s.id) || s.kind === 'text' || s.kind === 'bubble') return s;
         const c = colors[i++ % colors.length];
-        return s.fill === 'none' || s.kind === 'freehand' || s.kind === 'segment' ? { ...s, stroke: c } : { ...s, fill: c };
+        return s.fill === 'none' || s.kind === 'segment' || s.kind === 'line' || s.kind === 'point' ? { ...s, stroke: c } : { ...s, fill: c };
       }),
     });
   };
@@ -395,31 +317,6 @@ function StyleTab() {
         </div>
         <p className="guide-text">{st.guide}</p>
       </Card>
-
-      {st.id === 'expression' && (
-        <Card title="담고 싶은 감정">
-          <div className="emotion-row">
-            {(Object.keys(EMOTIONS) as EmotionId[]).map((id) => (
-              <button key={id} className={`emotion${state.emotion === id ? ' on' : ''}`} onClick={() => dispatch({ type: 'ui', patch: { emotion: id } })}>
-                <span className="emo-dots">
-                  {EMOTIONS[id].colors.slice(0, 3).map((c) => (
-                    <i key={c} style={{ background: c }} />
-                  ))}
-                </span>
-                {EMOTIONS[id].name}
-              </button>
-            ))}
-          </div>
-          <div className="row-btns">
-            <button className="btn small" onClick={() => recolor(EMOTIONS[state.emotion].colors)}>
-              <Icon name="palette" size={18} /> {targetText}을 감정 색으로
-            </button>
-            <button className="btn small" onClick={() => act.setDoc({ ...doc, background: { ...EMOTIONS[state.emotion].bg } })}>
-              감정 배경
-            </button>
-          </div>
-        </Card>
-      )}
 
       <Card title={`${st.name} 색 팔레트`}>
         <p className="muted small">누르면 {selection.length ? '고른 도형의 채우기 색' : '앞으로 그릴 도형의 색'}이 바뀌어요.</p>
@@ -487,24 +384,6 @@ function StyleTab() {
               <Tool icon="outline" label="굵은 외곽선" onClick={() => targets.length && act.setDoc(styleShapes(doc, targets, { stroke: '#2B2B2B', strokeWidth: 7 }))} title={`${targetText}에 굵은 외곽선`} />
               <Tool icon="rotate" label="45° 돌리기" onClick={() => act.rotateSel(45)} />
               <Tool icon="copy" label="복제" onClick={act.duplicate} />
-            </>
-          )}
-          {st.id === 'expression' && (
-            <>
-              <Tool icon="brush" label="붓터치 선" onClick={() => act.applyStyle({ lineStyle: 'brush' })} />
-              <Tool icon="outline" label="굵은 선" onClick={() => act.applyStyle({ strokeWidth: 14 })} />
-              <Tool
-                icon="contrast"
-                label="색 대비 강하게"
-                title={`${targetText}의 색을 더 진하고 강하게`}
-                onClick={() => {
-                  const want = new Set(targets);
-                  act.setDoc({ ...doc, shapes: doc.shapes.map((s) => (want.has(s.id) ? { ...s, fill: s.fill === 'none' ? 'none' : boostContrast(s.fill), stroke: boostContrast(s.stroke) } : s)) });
-                }}
-              />
-              <Tool icon="stretch" label="길게 늘이기" onClick={() => act.editSel((s) => stretchShape(s, 0.85, 1.4), '늘일')} />
-              <Tool icon="stretch" label="옆으로 늘이기" onClick={() => act.editSel((s) => stretchShape(s, 1.4, 0.85), '늘일')} />
-              <Tool icon="skew" label="기울이기" onClick={() => act.editSel((s) => skewShape(s, 0.35), '기울일')} />
             </>
           )}
           {st.id === 'pop' && (

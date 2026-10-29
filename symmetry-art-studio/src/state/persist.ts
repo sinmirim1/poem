@@ -4,10 +4,11 @@
  */
 import type { AppState } from './store';
 import { initialState } from './store';
+import { ART_STYLES } from '../data/artStyles';
 
 const KEY = 'symmetry-art-studio:v1';
 
-type Saved = Pick<AppState, 'screen' | 'step' | 'style' | 'doc' | 'desc' | 'settings' | 'drawStyle' | 'emotion'>;
+type Saved = Pick<AppState, 'screen' | 'step' | 'style' | 'doc' | 'desc' | 'settings' | 'drawStyle'>;
 
 export function saveState(s: AppState): boolean {
   const data: Saved = {
@@ -18,7 +19,6 @@ export function saveState(s: AppState): boolean {
     desc: s.desc,
     settings: s.settings,
     drawStyle: s.drawStyle,
-    emotion: s.emotion,
   };
   try {
     localStorage.setItem(KEY, JSON.stringify(data));
@@ -39,12 +39,12 @@ export function loadState(): AppState {
       ...base,
       screen: d.screen ?? base.screen,
       step: d.step ?? base.step,
-      style: d.style ?? null,
+      // 없어진 사조(예: 예전의 표현주의)로 저장된 작품은 사조를 다시 고르게 한다
+      style: d.style && d.style in ART_STYLES ? d.style : null,
       doc: { ...base.doc, ...d.doc },
       desc: { ...base.desc, ...d.desc },
       settings: { ...base.settings, ...d.settings },
       drawStyle: { ...base.drawStyle, ...d.drawStyle },
-      emotion: d.emotion ?? base.emotion,
     };
   } catch {
     return base;

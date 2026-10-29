@@ -217,9 +217,12 @@ export function ShapeView({ s, prefix }: { s: Shape; prefix: string }) {
       el = <path d={polyPath([a, b], false)} fill="none" {...stroke} />;
       break;
     }
-    case 'freehand':
-      el = <path d={smoothPath(s.points)} fill="none" {...stroke} />;
+    case 'freehand': {
+      // 채우기 색이 있으면 시작점과 끝점을 이어 닫힌 도형으로 칠한다
+      const filled = s.fill !== 'none';
+      el = <path d={smoothPath(s.points) + (filled ? ' Z' : '')} fill={filled ? s.fill : 'none'} {...stroke} />;
       break;
+    }
     case 'triangle':
     case 'rect':
     case 'polygon':

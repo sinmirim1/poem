@@ -1,5 +1,5 @@
-/** 네 가지 현대미술 사조의 안내 내용과 색 */
-import type { ArtStyleId, Background, EmotionId, LineStyle } from '../types';
+/** 세 가지 현대미술 사조의 안내 내용과 색 */
+import type { ArtStyleId, Background, LineStyle } from '../types';
 
 export interface ArtStyle {
   id: ArtStyleId;
@@ -59,26 +59,6 @@ export const ART_STYLES: Record<ArtStyleId, ArtStyle> = {
     defaults: { stroke: '#2B2B2B', fill: '#C9A66B', strokeWidth: 4, opacity: 0.8, lineStyle: 'solid' },
     accent: '#8C6A43',
   },
-  expression: {
-    id: 'expression',
-    name: '표현주의',
-    english: 'Expressionism',
-    tagline: '마음속 감정을 강렬한 색과 선으로',
-    features: ['감정과 분위기를 강하게 표현해요', '강렬한 색채와 거친 선', '과장된 형태와 움직임'],
-    mood: ['#D00000', '#FFBA08', '#3A0CA3', '#F48C06', '#03071E'],
-    tips: ['담고 싶은 감정을 먼저 하나 정하세요.', '붓터치 선으로 거칠게 그려 보세요.', '도형을 길게 늘이거나 기울여 보세요.'],
-    guide: '기쁨, 긴장, 설렘, 화남, 신비로움 중 작품에 담고 싶은 감정을 정하고 색과 선으로 표현해 보세요.',
-    keywords: ['강렬한 색', '감정 표현', '거친 붓터치', '과장된 형태', '소용돌이치는 선', '색의 대비'],
-    palette: ['#D00000', '#FFBA08', '#3A0CA3', '#F48C06', '#03071E', '#4CC9F0', '#7209B7', '#FFFFFF'],
-    backgrounds: [
-      { name: '불타는 하늘', bg: { type: 'radial', c1: '#FFBA08', c2: '#D00000' } },
-      { name: '깊은 밤', bg: { type: 'radial', c1: '#4361EE', c2: '#03071E' } },
-      { name: '노을 강', bg: { type: 'linear', c1: '#F48C06', c2: '#3A0CA3' } },
-      { name: '초록 바람', bg: { type: 'linear', c1: '#B5E48C', c2: '#1A759F' } },
-    ],
-    defaults: { stroke: '#03071E', fill: '#F48C06', strokeWidth: 8, opacity: 1, lineStyle: 'brush' },
-    accent: '#D00000',
-  },
   pop: {
     id: 'pop',
     name: '팝아트',
@@ -101,16 +81,8 @@ export const ART_STYLES: Record<ArtStyleId, ArtStyle> = {
   },
 };
 
-export const STYLE_ORDER: ArtStyleId[] = ['surreal', 'cubism', 'expression', 'pop'];
-
-/** 표현주의 감정 팔레트 */
-export const EMOTIONS: Record<EmotionId, { name: string; colors: string[]; bg: Background }> = {
-  joy: { name: '기쁨', colors: ['#FFD60A', '#FF9F1C', '#FF5D8F', '#7BD389', '#FFF3B0'], bg: { type: 'radial', c1: '#FFF3B0', c2: '#FF9F1C' } },
-  tension: { name: '긴장', colors: ['#111111', '#C1121F', '#FFD000', '#3A0CA3', '#7A7A7A'], bg: { type: 'linear', c1: '#7A7A7A', c2: '#111111' } },
-  flutter: { name: '설렘', colors: ['#FF8FAB', '#FFC2D1', '#B5179E', '#F9C74F', '#90DBF4'], bg: { type: 'radial', c1: '#FFE5EC', c2: '#FF8FAB' } },
-  anger: { name: '화남', colors: ['#9D0208', '#D00000', '#DC2F02', '#E85D04', '#370617'], bg: { type: 'radial', c1: '#E85D04', c2: '#370617' } },
-  mystery: { name: '신비로움', colors: ['#240046', '#5A189A', '#9D4EDD', '#4CC9F0', '#E0AAFF'], bg: { type: 'radial', c1: '#5A189A', c2: '#10002B' } },
-};
+/** 사조 고르기 화면·사조 도구·교사용 화면에 보여 줄 순서 */
+export const STYLE_ORDER: ArtStyleId[] = ['cubism', 'surreal', 'pop'];
 
 export const BASIC_COLORS = ['#111111', '#FFFFFF', '#9E9E9E', '#E53935', '#FB8C00', '#FDD835', '#43A047', '#1E88E5', '#8E24AA', '#6D4C41'];
 

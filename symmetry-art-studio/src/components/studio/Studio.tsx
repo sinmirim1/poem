@@ -6,7 +6,7 @@ import { LeftToolbar } from './LeftToolbar';
 import { RightPanel } from './RightPanel';
 import { Icon } from '../Icon';
 import { useActions } from './useActions';
-import { LEARN_LINE, LEARN_POINT, STEPS } from '../../data/texts';
+import { STEPS } from '../../data/texts';
 import { ART_STYLES } from '../../data/artStyles';
 
 function CanvasTopBar() {
@@ -76,9 +76,6 @@ function HelpBar() {
   const [open, setOpen] = useState(true);
   const info = STEPS[state.step - 1];
   const style = state.style ? ART_STYLES[state.style] : null;
-  const selSet = new Set(state.selection);
-  const selFig = state.doc.figures.find((f) => f.pairs.some((p) => selSet.has(p.orig) || selSet.has(p.copy)));
-  const learnLines = state.settings.learning ? (selFig ? (selFig.type === 'line' ? LEARN_LINE : LEARN_POINT) : null) : null;
 
   return (
     <div className={`help-bar${open ? '' : ' closed'}`}>
@@ -93,20 +90,6 @@ function HelpBar() {
             {state.step === 3 && style && <p className="muted">{style.guide}</p>}
             {state.step === 2 && <p className="muted">도형을 그리고 → 대칭축(또는 중심점)을 놓고 → 도형을 고른 뒤 "선대칭 복사"·"점대칭 복사"를 눌러요.</p>}
           </div>
-          {state.settings.learning && (
-            <div className={`learn-box${selFig ? ' ' + selFig.type : ''}`}>
-              <b>학습 모드</b>
-              {learnLines ? (
-                <ul>
-                  {learnLines.map((l) => (
-                    <li key={l}>{l}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p>대칭 도형을 하나 눌러 보세요. 대응점(ㄱ과 ㄱ′), 대응변(같은 색), 거리가 보여요.</p>
-              )}
-            </div>
-          )}
           <div className="help-nav">
             {state.step === 3 && (
               <button className="btn" onClick={() => dispatch({ type: 'step', step: 2 })}>

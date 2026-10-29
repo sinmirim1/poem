@@ -74,15 +74,6 @@ function crescent(c: Vec, R: number): Vec[] {
   return pts;
 }
 
-function spiral(c: Vec, turns: number, R: number): Vec[] {
-  const n = turns * 24;
-  return Array.from({ length: n }, (_, i) => {
-    const t = (i / n) * turns * Math.PI * 2;
-    const r = (R * i) / n;
-    return vec(c.x + r * Math.cos(t), c.y + r * Math.sin(t));
-  });
-}
-
 export interface StickerDef {
   name: string;
   make: (c: Vec, colors: { fill: string; stroke: string }) => Shape[];
@@ -110,12 +101,6 @@ export const STICKERS: Record<ArtStyleId, StickerDef[]> = {
     { name: '정사각형', make: (c, k) => [base({ kind: 'rect', points: regularPolygon(4, c, 90, -45), fill: k.fill, stroke: k.stroke, strokeWidth: 4, opacity: 0.8 })] },
     { name: '정오각형', make: (c, k) => [base({ points: regularPolygon(5, c, 90), fill: k.fill, stroke: k.stroke, strokeWidth: 4, opacity: 0.8 })] },
     { name: '정육각형', make: (c, k) => [base({ points: regularPolygon(6, c, 90, 0), fill: k.fill, stroke: k.stroke, strokeWidth: 4, opacity: 0.8 })] },
-  ],
-  expression: [
-    { name: '소용돌이', make: (c, k) => [base({ kind: 'freehand', points: spiral(c, 3, 110), fill: 'none', stroke: k.stroke, strokeWidth: 10, lineStyle: 'brush', label: '소용돌이' })] },
-    { name: '이글이글 해', make: (c) => [base({ points: starPoints(c, 110, 70, 14), fill: '#FFBA08', stroke: '#D00000', strokeWidth: 6, lineStyle: 'brush', label: '해' })] },
-    { name: '번개', make: (c) => [base({ points: at(c, [[-0.2, -1], [0.6, -1], [0.15, -0.15], [0.55, -0.15], [-0.35, 1], [-0.05, 0.1], [-0.45, 0.1]], 100), fill: '#FFD000', stroke: '#03071E', strokeWidth: 6, lineStyle: 'brush', label: '번개' })] },
-    { name: '눈물', make: (c) => [base({ points: Array.from({ length: 30 }, (_, i) => { const t = (i / 30) * Math.PI * 2; return vec(c.x + 60 * Math.sin(t) * Math.sin(t / 2) ** 1.4, c.y - 80 * Math.cos(t)); }), fill: '#4CC9F0', stroke: '#03071E', strokeWidth: 6, lineStyle: 'brush', label: '눈물' })] },
   ],
   pop: [
     { name: '별', make: (c) => [base({ points: starPoints(c, 100, 42), fill: '#FFD400', stroke: '#111111', strokeWidth: 6, label: '별' })] },

@@ -170,11 +170,22 @@ export function useActions() {
       const bad = doc.figures.filter((f) => !checkFigure(doc, f, settings.gridSize).ok);
       if (!bad.length) toast(`대칭 도형 ${doc.figures.length}개 모두 대칭이 맞아요! 👍`, 'good');
       else {
-        toast(`${bad.map(figTitle).join(', ')}의 대칭이 어긋났어요. 빨간 표시가 된 도형을 눌러 힌트를 확인해 보세요.`, 'warn');
-        dispatch({ type: 'settings', patch: { copyMarks: true } });
+        toast(`${bad.map(figTitle).join(', ')}의 대칭이 어긋났어요. 빨간 점선으로 표시된 도형을 눌러 힌트를 확인해 보세요.`, 'warn');
       }
     };
 
-    return { mirror, addAxis, remove, duplicate, nudge, rotateSel, scaleSel, editSel, applyStyle, order, place, checkAll, toast, setDoc };
+    /** 전체 그림 지우기: 도형·대칭축·중심점을 모두 지운다 (배경은 남기고, 되돌리기로 되살릴 수 있다) */
+    const clearAll = () => {
+      if (!doc.shapes.length && !doc.axes.length && !doc.centers.length) {
+        toast('도화지가 이미 비어 있어요.', 'info');
+        return;
+      }
+      if (!window.confirm('도화지의 그림을 모두 지울까요?\n(배경은 그대로 남아요. 실수로 지웠다면 "되돌리기"로 되살릴 수 있어요.)')) return;
+      setDoc({ ...doc, shapes: [], figures: [], axes: [], centers: [] }, []);
+      dispatch({ type: 'ui', patch: { guideSel: null, popPreview: false } });
+      toast('그림을 모두 지웠어요. 되살리려면 위쪽 "되돌리기"를 누르세요.', 'info');
+    };
+
+    return { mirror, addAxis, remove, clearAll, duplicate, nudge, rotateSel, scaleSel, editSel, applyStyle, order, place, checkAll, toast, setDoc };
   }, [state, dispatch]);
 }

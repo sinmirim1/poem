@@ -29,7 +29,7 @@ export function App() {
     return () => clearTimeout(t);
     // 저장할 값이 바뀔 때만 다시 저장
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.doc, state.desc, state.settings, state.style, state.step, state.screen, state.drawStyle, state.emotion]);
+  }, [state.doc, state.desc, state.settings, state.style, state.step, state.screen, state.drawStyle]);
 
   let body;
   switch (state.screen) {

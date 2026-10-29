@@ -67,17 +67,6 @@ function cubism(): Doc {
   return b.doc;
 }
 
-function expression(): Doc {
-  const b = new Builder({ type: 'radial', c1: '#FFBA08', c2: '#D00000' });
-  const swirl = STICKERS.expression[0].make(vec(560, 400), { fill: 'none', stroke: '#03071E' })[0];
-  b.sym(b.add(swirl), 'point', { center: vec(720, 480) });
-  const flame = sh('polygon', P([[600, 900], [560, 700], [640, 760], [620, 600], [700, 720]]), { fill: '#3A0CA3', stroke: '#03071E', strokeWidth: 8, lineStyle: 'brush' });
-  b.sym(b.add(flame), 'line', { axis: [vec(720, 0), vec(720, 960)] });
-  const sun = sh('polygon', starPoints(vec(200, 180), 110, 70, 14), { fill: '#FFBA08', stroke: '#D00000', strokeWidth: 6, lineStyle: 'brush' });
-  b.sym(b.add(sun), 'line', { axis: [vec(720, 0), vec(720, 960)] });
-  return b.doc;
-}
-
 function pop(): Doc {
   const b = new Builder({ type: 'dots', c1: '#FFE14D', c2: '#FF8A00' });
   const half = sh('polygon', P([[360, 160], [240, 440], [360, 440]]), { fill: '#E10600', strokeWidth: 8 });
@@ -93,15 +82,14 @@ function pop(): Doc {
   return b.doc;
 }
 
-const BUILDERS: Record<ArtStyleId, () => Doc> = { surreal, cubism, expression, pop };
+const BUILDERS: Record<ArtStyleId, () => Doc> = { cubism, surreal, pop };
 
 /** 부를 때마다 새 이름표로 새로 만든다 (여러 번 불러와도 겹치지 않게) */
 export const makeTemplate = (id: ArtStyleId): Doc => BUILDERS[id]();
 
 /** 사조 고르기 화면의 작은 예시 그림용 (한 번만 만든다) */
 export const TEMPLATE_PREVIEWS: Record<ArtStyleId, Doc> = {
-  surreal: surreal(),
   cubism: cubism(),
-  expression: expression(),
+  surreal: surreal(),
   pop: pop(),
 };

@@ -95,8 +95,7 @@ export interface Doc {
   popGrid: 1 | 2 | 3;
 }
 
-export type ArtStyleId = 'surreal' | 'cubism' | 'expression' | 'pop';
-export type EmotionId = 'joy' | 'tension' | 'flutter' | 'anger' | 'mystery';
+export type ArtStyleId = 'cubism' | 'surreal' | 'pop';
 
 export type Screen = 'home' | 'style' | 'studio' | 'describe' | 'submit' | 'teacher';
 export type Step = 1 | 2 | 3 | 4 | 5;
@@ -143,8 +142,6 @@ export interface Settings {
   showAngles: boolean;
   showAxes: boolean;
   showCenters: boolean;
-  learning: boolean;
-  copyMarks: boolean;
 }
 
 export interface DrawStyle {
@@ -153,11 +150,4 @@ export interface DrawStyle {
   strokeWidth: number;
   opacity: number;
   lineStyle: LineStyle;
-}
-
-export interface OwnSymmetry {
-  shapeId: string;
-  axes: [Vec, Vec][];
-  center: Vec | null;
-  infinite: boolean;
 }

@@ -2,11 +2,9 @@
  * 대칭의 핵심 계산
  *  - 선대칭 복사 / 점대칭 복사
  *  - 대칭이 맞는지 검사하고, 맞지 않으면 무엇을 고치면 되는지 힌트 만들기
- *  - 한 도형이 스스로 대칭인지 찾아보기
  */
-import type { Doc, OwnSymmetry, Shape, SymFigure, SymType, Vec } from '../types';
-import { centroid, dist, dot, mid, norm, normDeg, reflectOverLine, reflectOverPoint, signedDistToLine, sub, vec, add, mul, len } from './vec';
-import { isPolygonKind } from './shapes';
+import type { Doc, Shape, SymFigure, SymType, Vec } from '../types';
+import { dist, dot, mid, norm, normDeg, reflectOverLine, reflectOverPoint, signedDistToLine, sub, vec, len } from './vec';
 
 /** 점의 이름: 교과서처럼 ㄱ, ㄴ, ㄷ … (대응점은 ㄱ′, ㄴ′ …) */
 export const POINT_NAMES = ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅅ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
@@ -147,54 +145,4 @@ export function countFigures(doc: Doc, gridSize: number) {
     } else broken++;
   }
   return { line, point, broken };
-}
-
-/**
- * 한 도형이 스스로 선대칭·점대칭인지 찾아본다.
- * 꼭짓점들의 무게중심을 지나는 후보 직선(꼭짓점·변의 중점을 지나는 선, 변에 수직인 선)으로
- * 접어 보아 꼭짓점들이 서로 겹치면 대칭축이다.
- */
-export function findOwnSymmetry(s: Shape): OwnSymmetry | null {
-  if (s.kind === 'circle') {
-    return { shapeId: s.id, axes: [], center: s.points[0], infinite: true };
-  }
-  if (!(isPolygonKind(s.kind) || s.kind === 'segment')) return null;
-  const pts = s.points;
-  const c = centroid(pts);
-  const same = (mapped: Vec[]) => mapped.every((p) => pts.some((q) => dist(p, q) < SYM_TOL * 2));
-
-  const dirs: Vec[] = [];
-  const edges = pts.map((p, i) => [p, pts[(i + 1) % pts.length]] as [Vec, Vec]);
-  for (const p of pts) if (dist(p, c) > 1) dirs.push(norm(sub(p, c)));
-  for (const [a, b] of edges) {
-    const m = mid(a, b);
-    if (dist(m, c) > 1) dirs.push(norm(sub(m, c)));
-    const e = norm(sub(b, a));
-    dirs.push(vec(-e.y, e.x));
-  }
-  const axes: [Vec, Vec][] = [];
-  const seen: Vec[] = [];
-  for (const d of dirs) {
-    if (seen.some((q) => Math.abs(Math.abs(dot(q, d)) - 1) < 1e-4)) continue;
-    seen.push(d);
-    const a = c;
-    const b = add(c, d);
-    if (same(pts.map((p) => reflectOverLine(p, a, b)))) {
-      const r = Math.max(...pts.map((p) => dist(p, c))) + 40;
-      axes.push([add(c, mul(d, -r)), add(c, mul(d, r))]);
-    }
-  }
-  const center = same(pts.map((p) => reflectOverPoint(p, c))) ? c : null;
-  return { shapeId: s.id, axes, center, infinite: false };
-}
-
-/** 학습 모드에서 대응점을 보여 줄 점 번호 (자유선은 점이 많아서 몇 개만 고른다) */
-export function sampleIndices(s: Shape): number[] {
-  if (s.kind === 'freehand') {
-    const n = s.points.length;
-    if (n <= 4) return s.points.map((_, i) => i);
-    return [0, Math.floor(n / 3), Math.floor((2 * n) / 3), n - 1];
-  }
-  if (s.kind === 'circle') return [0];
-  return s.points.map((_, i) => i);
 }

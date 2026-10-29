@@ -9,8 +9,6 @@ import type {
   Description,
   Doc,
   DrawStyle,
-  EmotionId,
-  OwnSymmetry,
   Screen,
   Settings,
   Step,
@@ -34,14 +32,12 @@ export interface AppState {
   desc: Description;
   settings: Settings;
   drawStyle: DrawStyle;
-  emotion: EmotionId;
   tool: ToolId;
   selection: string[];
   multi: boolean;
   activeAxisId: string | null;
   activeCenterId: string | null;
   guideSel: { kind: 'axis' | 'center'; id: string } | null;
-  ownSym: OwnSymmetry | null;
   popPreview: boolean;
   toast: Toast | null;
   savedAt: number | null;
@@ -80,8 +76,6 @@ export const defaultSettings = (): Settings => ({
   showAngles: false,
   showAxes: true,
   showCenters: true,
-  learning: false,
-  copyMarks: true,
 });
 
 export const initialState = (): AppState => ({
@@ -94,14 +88,12 @@ export const initialState = (): AppState => ({
   desc: emptyDesc(),
   settings: defaultSettings(),
   drawStyle: { stroke: '#222222', fill: '#FFD400', strokeWidth: 4, opacity: 1, lineStyle: 'solid' },
-  emotion: 'joy',
   tool: 'select',
   selection: [],
   multi: false,
   activeAxisId: null,
   activeCenterId: null,
   guideSel: null,
-  ownSym: null,
   popPreview: false,
   toast: null,
   savedAt: null,
@@ -123,7 +115,7 @@ export type Action =
   | { type: 'settings'; patch: Partial<Settings> }
   | { type: 'drawStyle'; patch: Partial<DrawStyle> }
   | { type: 'desc'; patch: Partial<Description> }
-  | { type: 'ui'; patch: Partial<Pick<AppState, 'multi' | 'activeAxisId' | 'activeCenterId' | 'guideSel' | 'ownSym' | 'popPreview' | 'emotion' | 'rightOpen'>> }
+  | { type: 'ui'; patch: Partial<Pick<AppState, 'multi' | 'activeAxisId' | 'activeCenterId' | 'guideSel' | 'popPreview' | 'rightOpen'>> }
   | { type: 'toast'; text: string; tone?: Toast['tone'] }
   | { type: 'clearToast'; id: number }
   | { type: 'saved'; at: number }
@@ -148,7 +140,6 @@ function tidy(state: AppState): AppState {
     activeCenterId: state.activeCenterId && centerIds.has(state.activeCenterId) ? state.activeCenterId : null,
     guideSel:
       state.guideSel && (state.guideSel.kind === 'axis' ? axisIds : centerIds).has(state.guideSel.id) ? state.guideSel : null,
-    ownSym: state.ownSym && alive.has(state.ownSym.shapeId) ? state.ownSym : null,
   };
 }
 
@@ -157,9 +148,7 @@ export function reducer(state: AppState, a: Action): AppState {
     case 'go':
       return { ...state, screen: a.screen };
     case 'step': {
-      // 2단계는 원본·복사본 구분 표시를 켜고, 3단계(작품 꾸미기)에서는 끈다.
-      const copyMarks = a.step === 2 ? true : a.step === 3 ? false : state.settings.copyMarks;
-      return { ...state, step: a.step, screen: SCREEN_OF_STEP[a.step], settings: { ...state.settings, copyMarks }, popPreview: false };
+      return { ...state, step: a.step, screen: SCREEN_OF_STEP[a.step], popPreview: false };
     }
     case 'style': {
       const st = ART_STYLES[a.style];
@@ -199,7 +188,7 @@ export function reducer(state: AppState, a: Action): AppState {
       return tidy({ ...state, doc: state.future[0], future: state.future.slice(1), past: [...state.past, state.doc] });
     }
     case 'select':
-      return { ...state, selection: a.ids, guideSel: a.ids.length ? null : state.guideSel, ownSym: null };
+      return { ...state, selection: a.ids, guideSel: a.ids.length ? null : state.guideSel };
     case 'tool':
       return { ...state, tool: a.tool };
     case 'settings':

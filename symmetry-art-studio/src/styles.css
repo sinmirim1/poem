@@ -134,6 +134,16 @@ p {
   color: #fff;
 }
 
+.btn.danger-outline {
+  border-color: #f5b5b7;
+  color: var(--warn);
+}
+
+.btn.danger-outline:hover:not(:disabled) {
+  background: var(--warn-soft);
+  border-color: var(--warn);
+}
+
 .btn.small {
   min-height: 38px;
   padding: 6px 12px;
@@ -377,8 +387,8 @@ p {
   max-width: 1120px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 1.1fr 1fr;
-  gap: 40px;
+  grid-template-columns: 0.85fr 1.15fr;
+  gap: 36px;
   align-items: center;
 }
 
@@ -414,11 +424,71 @@ p {
   margin-bottom: 12px;
 }
 
-.hero-art {
+.hero-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hero-frames {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.hero-frame {
+  margin: 0;
+  background: #fff;
+  border-radius: 14px;
+  padding: 10px 10px 12px;
+  box-shadow: 0 10px 26px rgba(29, 42, 77, 0.14);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hero-frame svg {
   width: 100%;
   height: auto;
-  border-radius: 24px;
-  box-shadow: 0 10px 30px rgba(29, 42, 77, 0.12);
+  display: block;
+  border: 6px solid #3b2f25;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 2px #c9a66b;
+}
+
+.hero-frame figcaption {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.35;
+}
+
+.hero-frame figcaption b {
+  font-size: 1.05rem;
+  font-weight: 900;
+}
+
+.hero-frame .artist {
+  font-weight: 800;
+  color: var(--ink-2);
+  font-size: 0.9rem;
+}
+
+.hero-frame .works {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.hero-frame .sym {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--axis);
+  margin-top: 2px;
+}
+
+.hero-note {
+  font-size: 0.8rem;
+  color: var(--muted);
 }
 
 .home-steps {
@@ -481,7 +551,7 @@ p {
 /* 사조 고르기 */
 .style-cards {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
 }
 
@@ -1135,32 +1205,6 @@ p {
   vertical-align: 2px;
 }
 
-.learn-box {
-  flex: 1;
-  min-width: 280px;
-  border-radius: 12px;
-  padding: 8px 12px;
-  background: #f4f6fb;
-  font-size: 0.88rem;
-  border-left: 5px solid #98a2b3;
-}
-
-.learn-box.line {
-  background: var(--axis-soft);
-  border-left-color: var(--axis);
-}
-
-.learn-box.point {
-  background: var(--center-soft);
-  border-left-color: var(--center);
-}
-
-.learn-box ul {
-  margin: 4px 0 0;
-  padding-left: 18px;
-  line-height: 1.55;
-}
-
 .help-nav {
   display: flex;
   gap: 8px;
@@ -1263,43 +1307,9 @@ p {
   padding: 2px 8px;
 }
 
-.num-row {
-  display: flex;
-  gap: 8px;
-  align-items: flex-end;
-}
-
-.num-field {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  font-size: 0.8rem;
-  font-weight: 700;
+.badge.soft {
+  background: #eef0f5;
   color: var(--ink-2);
-  position: relative;
-}
-
-.num-field input {
-  min-height: 40px;
-  border: 2px solid var(--line);
-  border-radius: 10px;
-  padding: 4px 34px 4px 10px;
-  font-weight: 800;
-  font-size: 1rem;
-  width: 100%;
-}
-
-.num-field em {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
-  font-style: normal;
-  color: var(--muted);
-}
-
-.mini-btns {
-  display: flex;
-  gap: 4px;
 }
 
 .text-field {
@@ -1358,17 +1368,6 @@ p {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
-}
-
-.own-result {
-  background: #fff7e6;
-  border-radius: 10px;
-  padding: 8px 10px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
 }
 
 .prop {
@@ -1486,43 +1485,6 @@ p {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-}
-
-.emotion-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-}
-
-.emotion {
-  border: 2px solid var(--line);
-  background: #fff;
-  border-radius: 10px;
-  padding: 6px 4px;
-  font-weight: 800;
-  font-size: 0.85rem;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  min-height: 52px;
-}
-
-.emotion.on {
-  border-color: var(--ink);
-  background: #f2f4f7;
-}
-
-.emo-dots {
-  display: flex;
-  gap: 2px;
-}
-
-.emo-dots i {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
 }
 
 .bg-grid {
@@ -2003,7 +1965,7 @@ textarea.blank {
 
 .template-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   margin-top: 10px;
 }
@@ -2157,7 +2119,7 @@ textarea.blank {
 .lg-copy {
   width: 22px;
   height: 16px;
-  border: 2px dashed var(--axis);
+  border: 2px dashed var(--warn);
   border-radius: 3px;
 }
 
@@ -2188,10 +2150,6 @@ kbd {
 
 /* ───────── 화면 크기에 맞추기 ───────── */
 @media (max-width: 1200px) {
-  .style-cards {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
   .studio {
     grid-template-columns: 200px minmax(0, 1fr);
   }
@@ -2221,8 +2179,7 @@ kbd {
     place-items: center;
   }
 
-  .flow,
-  .template-row {
+  .flow {
     grid-template-columns: repeat(2, 1fr);
   }
 }

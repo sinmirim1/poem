@@ -1,0 +1,26 @@
+{
+  "name": "symmetry-art-studio",
+  "private": true,
+  "version": "1.0.0",
+  "description": "대칭 아트 스튜디오: 수학으로 만드는 현대미술 (초등 5~6학년 미술·수학 융합 웹앱)",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit && vite build",
+    "build:classroom": "npm run build && node scripts/copy-to-root.mjs",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.12",
+    "@types/react-dom": "18.3.1",
+    "@vitejs/plugin-react": "4.3.4",
+    "typescript": "5.6.3",
+    "vite": "5.4.11",
+    "vite-plugin-singlefile": "2.0.3"
+  }
+}

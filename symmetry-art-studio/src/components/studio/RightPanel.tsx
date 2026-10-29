@@ -1,5 +1,5 @@
 /** 오른쪽 패널: 고른 도형의 속성 / 사조 도구 */
-import { useEffect, useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import type { BgType, Shape } from '../../types';
 import { useStore } from '../../state/store';
 import { Icon } from '../Icon';
@@ -46,7 +46,7 @@ function usePalette() {
 }
 
 // ───────────────────────── 속성 ─────────────────────────
-function PropertiesTab() {
+function PropertiesSection() {
   const { state, dispatch } = useStore();
   const act = useActions();
   const palette = usePalette();
@@ -248,7 +248,7 @@ const BG_TYPES: [BgType, string][] = [
   ['floor', '꿈속 바닥'],
 ];
 
-function StyleTab() {
+function StyleSection() {
   const { state, dispatch } = useStore();
   const act = useActions();
   const { doc, selection, settings } = state;
@@ -432,26 +432,26 @@ function StyleTab() {
   );
 }
 
+/** 도형 속성과 사조 도구를 한 패널에 위아래로 이어서 보여 준다 */
 export function RightPanel() {
   const { state, dispatch } = useStore();
-  const [tab, setTab] = useState<'props' | 'style'>(state.step === 3 ? 'style' : 'props');
-  useEffect(() => setTab(state.step === 3 ? 'style' : 'props'), [state.step]);
+  const style = state.style ? ART_STYLES[state.style] : null;
 
   return (
-    <aside className={`right-panel${state.rightOpen ? ' open' : ''}`} aria-label="속성과 꾸미기">
-      <div className="panel-tabs" role="tablist">
-        <button role="tab" aria-selected={tab === 'props'} className={tab === 'props' ? 'on' : ''} onClick={() => setTab('props')}>
-          <Icon name="layers" size={18} /> 도형 속성
-        </button>
-        <button role="tab" aria-selected={tab === 'style'} className={tab === 'style' ? 'on' : ''} onClick={() => setTab('style')}>
-          <Icon name="palette" size={18} /> 사조 도구
-        </button>
+    <aside className={`right-panel${state.rightOpen ? ' open' : ''}`} aria-label="도형 속성과 사조 도구">
+      <div className="panel-head">
+        <Icon name="layers" size={18} />
+        <span>도형 속성 · 사조 도구</span>
         <button className="panel-close" onClick={() => dispatch({ type: 'ui', patch: { rightOpen: false } })} aria-label="패널 닫기">
           <Icon name="close" size={18} />
         </button>
       </div>
-      {tab === 'props' ? <PropertiesTab /> : <StyleTab />}
+      <h3 className="panel-section">도형 속성</h3>
+      <PropertiesSection />
+      <h3 className="panel-section">
+        <Icon name="palette" size={18} /> 사조 도구{style ? ` · ${style.name}` : ''}
+      </h3>
+      <StyleSection />
     </aside>
   );
 }
-

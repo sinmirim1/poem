@@ -151,10 +151,26 @@ export function reducer(state: AppState, a: Action): AppState {
       return { ...state, step: a.step, screen: SCREEN_OF_STEP[a.step], popPreview: false };
     }
     case 'style': {
+      // 같은 사조를 다시 누르면 학생이 고른 배경을 그대로 둔다.
+      if (a.style === state.style) return state;
+      // 사조를 바꾸면 배경과 그리기 색을 새 사조의 것으로 바꾼다 (팔레트는 state.style을 따라 바뀐다).
+      // 팝아트의 반복 배치는 다른 사조에서는 고칠 곳이 없으므로 한 장으로 되돌린다.
+      // 바꾸기 전 배경은 되돌리기로 되살릴 수 있다.
       const st = ART_STYLES[a.style];
-      const bgUntouched = state.doc.background.type === 'solid' && state.doc.background.c1.toUpperCase() === '#FFFFFF';
-      const doc = bgUntouched && state.doc.shapes.length === 0 ? { ...state.doc, background: { ...st.backgrounds[0].bg } } : state.doc;
-      return { ...state, style: a.style, drawStyle: { ...st.defaults }, doc };
+      const doc: Doc = {
+        ...state.doc,
+        background: { ...st.backgrounds[0].bg },
+        popGrid: a.style === 'pop' ? state.doc.popGrid : 1,
+      };
+      return {
+        ...state,
+        style: a.style,
+        drawStyle: { ...st.defaults },
+        doc,
+        past: [...state.past, state.doc].slice(-HISTORY_LIMIT),
+        future: [],
+        popPreview: false,
+      };
     }
     case 'doc': {
       const next: AppState = {

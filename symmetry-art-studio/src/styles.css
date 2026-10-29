@@ -1221,40 +1221,45 @@ p {
   min-height: 0;
 }
 
-.panel-tabs {
+.panel-head {
   display: flex;
+  align-items: center;
+  gap: 6px;
   position: sticky;
   top: 0;
   z-index: 2;
   background: #fff;
   border-bottom: 1px solid var(--line);
+  padding: 0 6px 0 14px;
+  min-height: 48px;
+  font-weight: 900;
 }
 
-.panel-tabs button {
+.panel-head span {
   flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
+}
+
+.panel-head .panel-close {
+  display: none;
+  width: 40px;
+  height: 40px;
   border: none;
   background: none;
-  font-weight: 800;
-  padding: 12px 6px;
+  border-radius: 10px;
   cursor: pointer;
-  border-bottom: 3px solid transparent;
-  color: var(--muted);
-  min-height: 48px;
+  place-items: center;
 }
 
-.panel-tabs button.on {
-  color: var(--ink);
-  border-bottom-color: var(--primary);
-}
-
-.panel-tabs .panel-close {
-  display: none;
-  flex: none;
-  width: 48px;
+.panel-section {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 10px 0;
+  padding: 8px 4px 4px;
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: var(--ink-2);
+  border-bottom: 2px solid var(--line);
 }
 
 .panel-body {
@@ -2174,9 +2179,8 @@ kbd {
     display: inline-flex;
   }
 
-  .panel-tabs .panel-close {
+  .panel-head .panel-close {
     display: grid;
-    place-items: center;
   }
 
   .flow {

@@ -1052,6 +1052,31 @@ p {
 .empty-card h3 {
   font-size: 1.15rem;
   font-weight: 900;
+  padding-right: 40px;
+}
+
+.empty-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 10px;
+  background: var(--warn);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.15);
+}
+
+.empty-close:hover {
+  background: #c9373c;
+}
+
+.empty-close .icon {
+  stroke-width: 3;
 }
 
 .empty-card ol {

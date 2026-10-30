@@ -83,6 +83,8 @@ export function CanvasView() {
   const [draft, setDraft] = useState<Vec[]>([]);
   const [live, setLive] = useState<Live>(null);
   const [measure, setMeasure] = useState<{ text: string; at: Vec } | null>(null);
+  // 빈 도화지 안내창을 X로 닫았는지 (예시 삼각형 없이 창만 닫는다)
+  const [introClosed, setIntroClosed] = useState(false);
   const gesture = useRef<Gesture | null>(null);
   const pointers = useRef(new Map<number, Vec>());
   const spaceDown = useRef(false);
@@ -632,7 +634,7 @@ export function CanvasView() {
     toast('삼각형과 세로 대칭축을 놓았어요. 이제 왼쪽 파란 "선대칭 복사" 버튼을 눌러 보세요!', 'good');
   };
 
-  const isEmpty = doc.shapes.length === 0 && state.step <= 3;
+  const isEmpty = doc.shapes.length === 0 && state.step <= 3 && !introClosed;
   const tiledPreview = state.popPreview && doc.popGrid > 1;
   const gridColor = '#8EA0BF';
 
@@ -711,7 +713,10 @@ export function CanvasView() {
       </svg>
 
       {isEmpty && (
-        <div className="empty-card">
+        <div className="empty-card" role="dialog" aria-label="처음이라면 이렇게 시작해 보세요">
+          <button className="empty-close" onClick={() => setIntroClosed(true)} aria-label="안내 닫기" title="안내 닫기">
+            <Icon name="close" size={20} />
+          </button>
           <h3>처음이라면 이렇게 시작해 보세요</h3>
           <ol>
             <li>
